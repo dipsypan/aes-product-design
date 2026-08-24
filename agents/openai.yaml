@@ -1,0 +1,7 @@
+interface:
+  display_name: "AES 业务 Skill"
+  short_description: "逐层合并公共与 AES 业务设计规则"
+  default_prompt: "Use $aes-business-skill to route this AES requirement through theme, page framework, business patterns, components, copy calibration when needed, and frontend acceptance."
+
+policy:
+  allow_implicit_invocation: true
