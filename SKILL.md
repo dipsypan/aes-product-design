@@ -1,223 +1,269 @@
 ---
-name: aes-business-skill
-description: 为深信服 AES 下一代端点安全产品提供业务设计知识路由和前端交付约束。用于 AES 的需求设计、主题建模、列表/表单/详情框架、业务处理、业务组件、页面文案、前端实现和回归验收；在公共设计 Skill 的每个设计层级中按需加载 AES 同层差异规则，并允许从细则返回框架或主题重新判断。策略、规则、任务、病毒防护等 AES 业务需求均应使用。
+name: aes-product-design
+description: 提供 AES（深信服下一代端点安全）专属业务设计规范与设计知识，包括产品定位、业务对象、导航、主题、页面模板、Pattern、Feature、Component、交互规则、产品术语与已有资产复用规则；供 prd-design-code 在 AES 需求设计和页面规划阶段按需读取
+metadata:
+  skill_type: product-design
+  product_id: aes
+  scope: b2b-product-design
+  capability: product-design-knowledge
+  inherits: common-design
+  version: "1.2"
 ---
 
-# AES 业务 Skill
+# AES Product Design
 
-## 目标
+## 定位
 
-将公共设计规则和 AES 业务规则按相同设计层级组合使用。不要先执行完整公共设计再统一覆盖 AES，也不要一次加载全部 AES Reference。
+本 Skill 是 AES 产线设计知识源，由 `prd-design-code` 按设计层级编排使用，不独立输出完整 PRD、设计说明书、HTML 或代码。
 
-固定遵循：
+| Skill | 固定职责 |
+| --- | --- |
+| `prd-design-code` | 分析需求、识别产品和当前层级、编排 AES Product Design 与 Common Design、汇总最终交付物 |
+| AES Product Design | 提供 AES 业务事实、产品差异、既有设计模式、业务组件映射和专属设计规则 |
+| Common Design | 提供跨产线通用设计规则，按 Coverage 关系补充 AES 未覆盖的通用事项 |
+
+AES Product Design 不主动调用或反向编排另外两个 Skill。需要 Common Design、需要返回上层重算或存在知识缺口时，将结构化结果返回 `prd-design-code`。
+
+## 分层调用模型
+
+`references/index.md` 是 AES 侧阶段路由入口。`prd-design-code` 首次进入 AES Product Design 时先读取该 Index，同时结合 Common Design 的整体阶段路由判断当前层是否命中、由哪一侧提供规则以及是否需要合并；不得把 AES 层级调用当作独立于 Common Design 的第二套流程，也不得使用旧版目录、文件名或层级名称替代下表：
 
 ```text
-主题场景 → 页面框架 → 业务处理 / 业务组件 → 设计结果
-    ↑           ↑                 │
-    └───────────┴──── 发现冲突时返回重算
-
-需要输出页面文案时：设计结果 → AES 术语与命名校准
+需求分析
+  ↓
+Navigation → Theme → Template → Pattern → Feature → Component → Copy
+  ↓
+设计说明书
 ```
 
-- 每个阶段先取得公共设计 Skill 的同层结论，再读取 AES 同层 Reference 进行继承、补充、覆盖、替换或禁用。
-- 下层规则不能破坏已确认的主题业务不变量；下层能力无法承载时返回对应上层重算。
-- 术语不参与需求理解、主题识别、页面框架或组件选择，只在生成或检查文案时调用。
+| 层级 | 只解决什么 | 不解决什么 |
+| --- | --- | --- |
+| Navigation | 功能从哪里进入、菜单/页头 Tab 层级、入口变更影响 | 业务模型和页面结构 |
+| Theme | 业务对象、治理模型、生效链路、生命周期和业务不变量；命中可复用主题时可直接指定并锁定下游方案 | Theme 未指定的通用事项 |
+| Template | 页面类型、主容器、主要区域及区块顺序；允许页面级决策链 | 区域内部复杂交互方案 |
+| Pattern | 在已确定 Template 内执行上游锁定方案，或对未锁定事项选择、组合区域级或复杂交互方案 | 改变业务模型或主容器 |
+| Feature | 已确定采用后可完整执行的单项方案；可含流程、状态、校验和异常 | 在多套设计方案中选择 |
+| Component | 真实组件、稳定业务封装、实现入口和复用边界 | 反推上层方案 |
+| Copy | 校准已确定语义的用户可见文案和 AES 术语 | 新增业务语义或改变方案 |
 
-## 初始加载
+`Pattern`、`Feature` 与 `Component` 是三个独立层级：Pattern 对未锁定事项负责选择和组合方案，对锁定事项只负责执行；Feature 负责执行已选定的单项能力；Component 负责真实 AES 业务封装和实现映射。不得将三者合并为旧版的“业务处理 / 业务组件”阶段。
 
-1. 完整读取 `references/reference-registry.md`。
-2. 读取 `references/product-context.md`，建立 AES 产品边界；不要在此阶段读取术语、全部主题或全部页面模板。
-3. 从用户需求、公共设计阶段输出、真实产品页面和项目代码中提取业务事实。
-4. 按注册表从主题层开始逐层读取命中的 AES Reference。
+### Theme 锁定下游方案
 
-将 Reference 当作本 Skill 的强制规则文件，不把它们当成可独立触发的 Skill。
+Theme 是按需命中的完整业务方案来源。命中具体 Theme 后，Theme 可以根据稳定的 AES 业务模式直接指定 Template、Pattern、Feature、Component 和 Copy 要求，并通过 `prescribed_downstream_contracts` 标记锁定范围：
 
-## 规则合并
+- `locked: true` 的事项由 Theme 持有决策权；对应下游层只执行、展开和验证，不得重新选型、降级或修改；
+- Theme 未指定或明确列入 `unresolved_items` 的事项，才由对应下游层执行常规路由和决策；
+- 下游发现锁定方案缺少实现证据、无法执行或与已确认用户要求冲突时，返回 Theme 或最早受影响的上游层，不得在下游静默改写；
+- 用户确认的要求始终具有最终决策权。用户修改 Theme 方案后，将用户结论更新为新的锁定输入，并记录被覆盖的 Theme 规则及影响；
+- 读取锁定方案指定的下游 Reference，是为了取得完整执行流程、状态、校验、异常和组件映射，不代表下游重新获得决策权。
 
-### 优先级
+```yaml
+prescribed_downstream_contracts:
+  template:
+    - { contract_id: "", locked: true | false, values: {} }
+  patterns:
+    - { contract_id: "", locked: true | false, values: {} }
+  features:
+    - { contract_id: "", locked: true | false, enabled_when: "", values: {} }
+  components:
+    - { contract_id: "", locked: true | false, values: {} }
+  copy:
+    - { contract_id: "", locked: true | false, values: {} }
+  unresolved_items: []
+```
+
+不得规定先完整读取 Common Design 或先完整读取 AES Product Design。每次只处理 `current_stage` 的具体事项，并由 `prd-design-code` 联合判断 AES 与 Common Design 在该层的命中关系；当前层完成后再进入下一层。若用户已明确当前层结论（包括入口、页面模板、业务规则、Feature 或组件），直接将用户结论作为当前层输入，不得用 Common Design 或 AES Reference 覆盖；仅对用户未说明的事项执行双方的匹配和 Coverage 判断。
+
+### 层间返回规则
+
+- Theme 是可选层，不是所有需求的必经层。只有 AES 或 Common Design 任一侧命中可复用主题，或双方联合判断确实需要抽取业务主题时，才进入 Theme；两侧都未命中时直接进入 Template。
+- Template 发现入口不成立：返回 Navigation；发现业务模型不成立或 Theme 锁定的 Template 无法执行：返回 Theme；未命中 Theme 时保留当前层并记录缺口。
+- Pattern 需要改变未被 Theme 锁定的页面类型、主容器、主要区域或区块顺序：返回 Template；若受影响事项已被 Theme 锁定，返回 Theme，不得直接修改 Template 契约。
+- Feature 对未锁定事项出现多套候选方案或需要组合多个能力：返回 Pattern；需要改变页面结构时返回 Template。若受影响事项已被 Theme 锁定，返回 Theme，不得在 Feature 层重新选择。
+- Component 缺少实现映射：记录缺口；若缺口涉及 Theme 锁定组件则返回 Theme，否则返回最早受影响的 Feature、Pattern 或 Template。
+- Copy 与已确认业务语义冲突：锁定文案来自 Theme 时返回 Theme，否则返回产生该语义的最早层级。
+
+层间返回以双方联合结果为准：下层发现冲突、缺口或前置结论失效时，`return_to_stage` 指向最早受影响的共同上游层；不得因为问题来自 Common Design 就跳过 AES，也不得因为当前调用的是 AES Product Design 就只返回 AES Theme。
+
+## Coverage 与知识来源
+
+Coverage 只决定当前阶段命中的具体设计能力如何联合读取 AES 与 Common Design，不把不同阶段的能力强行放进同一张枚举表。阶段是否进入、是否跳过以及返回哪一层，由双方的整体路由和上游契约共同决定；关系必须以命中的具体 Reference 正文和当前阶段约束为准，并在结果中逐项记录。
+
+| 当前阶段 | 读取原则 |
+| --- | --- |
+| Navigation | 业务菜单、入口和层级事实以 AES 导航 Reference 与需求/现状证据为准；Common Design 可补充通用导航约束或影响检查，但不得补造 AES 菜单、入口或层级。 |
+| Theme | 先联合匹配 AES 与 Common Design Theme；命中 AES Theme 时按 AES 的 `override` 规则处理，不再读取 Common Design 同层 Theme；AES 未命中时可读取命中的 Common Design Theme；两侧都未命中则跳过 Theme。 |
+| Template | 先执行 Theme 锁定的 Template；只对 Theme 未指定事项联合读取 AES `03-templates/index.md` 与 Common Design 页面模板路由。命中 AES 后，`extend` 或 `override` 以具体 AES Template 正文判定；未命中 AES 时采用 Common Design Template。 |
+| Pattern | 先执行 Theme 锁定的 Pattern 及其参数，不重新选型；只对 Theme 未指定事项联合读取 AES `04-patterns/index.md` 与 Common Design Pattern 路由，并按具体 Reference 判断 `extend` 或 `override`。 |
+| Feature | Theme 或 Pattern 已锁定 Feature 时直接完整执行；只对未指定的单项能力继续匹配 AES 或 Common Design Feature。命中 AES Feature 时按该 Feature 的关系声明读取。 |
+| Component | Theme、Pattern 或 Feature 已锁定组件语义或映射时直接执行并验证；只对未指定的实现映射继续匹配 AES Component、Common Design 或项目代码。 |
+| Copy | 固定采用 `extend`：读取 AES 术语与 Common Design 通用文案，AES 术语和表达优先。 |
+
+`inherit`、`extend`、`override` 不是阶段清单，而是每项命中能力的关系标记：`inherit` 表示采用 Common Design，`extend` 表示保留 Common Design 并增加 AES 约束，`override` 表示以 AES Reference 为唯一业务依据。关系记录必须同时说明 AES、Common Design 是否命中，以及当前具体 Reference 是否要求合并或替代；不得把“命中 AES”自动等同于所有阶段的 `override`。Navigation 的业务事实仍以 AES 为准，Template、Pattern、Feature 和 Component 按具体 Reference 与双方命中结果判定。
+
+不得只返回“AES 优先”。必须逐项说明设计能力、关系、命中的 AES Reference、AES 已确定规则、是否读取 Common Design、Common Design 待补充项和知识缺口。Common Design 不得补造 AES 专属业务对象、状态流转、权限、数量限制、生效关系或生命周期。
+
+## 读取路由
+
+首次进入本 Skill 时读取 `references/index.md`。之后只读取 `current_stage` 对应的 AES 层 Index，并由 `prd-design-code` 同步匹配 Common Design 当前层路由和具体 Reference；依据双方命中结果与具体 Coverage 决定来源，不递归加载全部文件。
+
+每层按以下顺序执行；每个阶段是否进入、是否读取 AES/Common Design、是否合并以及返回哪一层，由双方命中结果和上游契约共同决定：
+
+```text
+识别 current_stage
+  ↓
+读取上游锁定契约及 AES 与 Common Design 当前层 Index（按需）
+  ↓
+锁定事项直接执行；未指定事项联合匹配双方 Reference
+  ↓
+按命中能力的 `inherit / extend / override` 或阶段专属读取原则决定来源
+  ↓
+返回当前层契约，再进入下一层或返回上层重算
+```
+
+| `current_stage` | 首个读取入口 | 后续读取方式 |
+| --- | --- | --- |
+| `navigation` | `references/01-navigation/navigation.md` | 单文件完成入口判断 |
+| `theme` | `references/02-themes/index.md` | 按主题映射只读取命中的模型；策略先完成 Index 内路由 |
+| `template` | `references/03-templates/index.md` | 只读取 list、form、detail 中命中的模板 |
+| `pattern` | `references/04-patterns/index.md` | 按决策问题读取一个主 Pattern，按需追加依赖 Pattern |
+| `feature` | `references/05-features/index.md` | 只读取 Pattern 输出或用户明确指定的 Feature |
+| `component` | `references/06-components/index.md` | 只读取 Feature/Pattern 要求的真实组件映射 |
+| `copy` | `references/07-copywriting-terminology.md` | 业务语义和方案确定后读取 |
+
+### 特殊路由要求
+
+- 需求已指定菜单、页头 Tab 或页面入口时，直接遵循用户指定内容并记录为 `navigation_contract`；需求未涉及入口时，Navigation 仅按需读取，不因缺少导航信息阻断后续 Theme。若入口变更可能影响首页或跨模块入口，再补充影响检查。
+- Theme 中的策略需求必须先执行 `references/02-themes/index.md` 的策略路由，禁止直接猜测具体策略模型。
+- Theme 输出的 `prescribed_downstream_contracts` 是后续层的锁定输入；后续层只展开执行，禁止重新决策。
+- Template 输出下游 `pattern_requirements` 和可直接调用的 `feature_requirements`，不得直接指定组件实现。
+- Pattern 输出选定方案及所需 Feature/Component；没有决策链的单项能力可由 Template 直接交给 Feature。
+- Feature 只执行既定能力，不为经过 Pattern 而制造无意义的选择。
+- Copy 最后校准表达；不得因为文案文件在索引中出现，就提前用术语影响业务或结构决策。
+
+## 规则优先级
 
 ```text
 用户本次明确且已确认的要求
-> 已确认的 AES 主题业务不变量
-> 当前层 AES 差异规则
-> 当前层公共设计规则
-> SD Design / iDux 基础能力
+> 已确认的 AES 业务事实与主题业务不变量
+> 当前事项命中的 AES Reference
+> 当前事项的 Common Design 规则
+> 设计系统和组件库默认能力
 ```
 
-- 用户要求与业务不变量冲突时必须指出影响，不能静默覆盖。
-- 页面模板、业务处理和组件规则只能在上层允许的范围内细化。
-- AES 当前层未定义差异时，完整沿用公共设计规则。
+- 用户要求与 AES 业务不变量冲突时，返回冲突和影响，由 `prd-design-code` 提请用户确认。
+- AES 只覆盖 Reference 明确规定的事项，不因命中一条规则而替换当前层其他能力。
+- 项目代码、真实页面和接口用于确认现状与实现证据，不得凭单一历史实现覆盖已确认规则。
 
-### 差异关系
+## Reference 身份要求
 
-每次合并公共与 AES 规则时，按以下关系记录：
+所有 `references/` 文件均属于 AES Product Design 内部知识，不作为独立 Skill 调用。每个 Reference 必须在一级标题后明确：
 
-| 关系 | 执行方式 |
-| --- | --- |
-| `inherit` | 完整使用公共规则 |
-| `extend` | 保留公共规则并增加 AES 约束 |
-| `override` | 只修改公共规则的明确参数或行为，其余继续继承 |
-| `replace` | 当前事项完整使用 AES 规则 |
-| `disable` | AES 明确不采用该公共能力，并记录原因 |
+1. 归属 AES Product Design；
+2. 是 AES 产线专属设计规范或索引；
+3. 不作为 Common Design 通用规范；
+4. 当前文件明确规定的 AES 规则优先，未覆盖事项按 Coverage 关系处理。
 
-不得用一句“AES 规则优先”替代逐项合并。
+统一身份声明不改变 Coverage：`override` 是否读取 Common Design，仍以 Coverage 和 Reference 正文为准。
 
-## 分层执行
+## 输入契约
 
-### 1. 主题场景
-
-目标：确定业务对象、业务目标、治理模型、生效链路、生命周期和页面清单。
-
-1. 接收公共设计 Skill 对主题场景的初步判断。
-2. 根据 `reference-registry.md` 读取命中的 AES 主题 Reference。
-3. 先区分规则、策略及其他主题；不能因页面相似而合并业务模型。
-4. 输出业务不变量、页面清单、交互契约和下一阶段需要的页面能力。
-
-当前主题基线：
-
-- 规则管理：`references/themes/rule-management.md`
-- 策略管理：先读取 `references/themes/policy-routing.md`，再进入已有安全策略或全新策略分支。
-- 尚未形成 Reference 的任务中心、病毒防护等主题：读取真实项目和需求证据，返回 `reference_gaps`，不得套用规则或策略模型。
-
-主题阶段不得读取 `references/terminology.md` 来帮助业务分类。
-
-### 2. 页面框架
-
-目标：在主题返回的 `page_inventory` 和 `design_capabilities` 内确定页面结构。
-
-对每项页面能力，先结合公共页面框架，再读取 AES 对应模板：
-
-- `list | search | filter | sort`：`references/templates/list.md`
-- `form`：`references/templates/form.md`
-- `detail`：`references/templates/detail.md`
-
-本阶段确定容器、区域、字段组织、操作位置和页面状态，不重新定义主题业务对象。主题已经固定容器或业务模块时，模板跳过对应选型，只完成其余结构。
-
-若框架无法承载主题任务，返回主题阶段；不得通过堆叠抽屉、Tab、卡片或自定义组件勉强实现。
-
-### 3. 业务处理与业务组件
-
-目标：确定页面框架中命中的细粒度交互和业务组件。
-
-1. 根据框架产生的 `pattern_capabilities` 读取 `references/patterns/index.md` 中命中的规则。
-2. 根据 `component_capabilities` 读取 `references/components/index.md` 中命中的组件规则。
-3. 同时执行公共设计 Skill 的同类交互/组件规则和 SD Design / iDux 组件约束。
-4. AES 没有差异规则时沿用公共结果，不自行补造 AES 特例。
-
-业务处理包括筛选、标签、二次确认、批量操作、实体展示、层级省略、跳转等；业务组件包括资产选择器、资产卡片、搜索、导入导出、动态页签等。
-
-若细则或组件改变了页面区域、容器或信息层级，返回页面框架阶段；若改变业务对象、生效范围、生命周期或治理模型，返回主题阶段。
-
-### 4. 文案与术语校准
-
-仅在需要生成或检查以下内容时读取 `references/terminology.md`：
-
-- 页面、菜单、字段和状态名称
-- 按钮、操作组和跳转入口文案
-- 提示、确认、错误、空状态和帮助文案
-- 中英文术语、单位、实体和技术内容表达
-
-术语规则只校准表达，不新增业务字段，不改变业务语义，不决定页面、容器和组件。文案校准发现含义不明确时返回原决策阶段确认语义，而不是用术语规则猜测。
-
-### 5. 评估与回退
-
-形成方案后交给公共评估 Skill。按问题归属回退：
-
-| 问题 | 返回阶段 |
-| --- | --- |
-| 业务对象、治理模型、生效链路或任务闭环错误 | 主题场景 |
-| 页面容器、区域、信息组织或层级错误 | 页面框架 |
-| 交互状态、业务组件或组件参数错误 | 业务处理 / 业务组件 |
-| 名称、按钮、提示语或术语不一致 | 文案与术语校准 |
-
-回退时保留未受影响的已确认结论，只重算受影响阶段及其下游；禁止每次从头加载全部 Reference。
-
-## 策略主题内部路由
-
-策略主题读取 `references/themes/policy-routing.md`，依据业务对象和治理模型判断：
-
-- 可复用安全策略治理模型：读取 `references/themes/policy-management-existing.md`。
-- 存在独立策略对象或治理模型：读取 `references/themes/policy-management-new.md`。
-
-规则主题直接读取 `references/themes/rule-management.md`。规则与策略分别建模：规则不得继承策略的优先级、内置策略、复制、分配冲突和继承模型；策略也不得因包含条件配置而降级为规则。
-
-## 循环上下文包
-
-每个阶段读取和回写同一上下文：
+`prd-design-code` 调用时提供当前层可获得的信息，不要求首轮填满：
 
 ```yaml
 original_request: 用户原始需求
-target_outcome: 目标结果
-delivery_scope: design | frontend | design-and-frontend
-current_stage: theme | template | pattern-component | copy | acceptance
-public_stage_result: 当前阶段公共设计结论
-matched_aes_references: 当前阶段实际读取的 AES Reference
-rule_relations:
-  inherited: []
-  extended: []
-  overridden: []
-  replaced: []
-  disabled: []
-business_pattern: 主题业务模式
-business_invariants: 不得被下游破坏的业务规则
-interaction_contracts: 前置状态、动作、结果和失败反馈
-form_state_contract: 注册、校验、dirty、变更和提交映射
-page_inventory: 页面、容器和关键状态
-design_capabilities: 下一步所需页面能力
-pattern_capabilities: 下一步所需业务处理能力
-component_capabilities: 下一步所需业务组件能力
-visual_contracts: 布局、组件、层级和状态规则
-copy_contracts: 待生成或已校准的页面文案
-reference_evidence: 需求、真实页面、项目代码和接口证据
-reference_gaps: 当前缺少的 AES 业务 Reference
-acceptance_checks: 可观察、可执行的验收条件
-regression_scope: 可能受影响的既有行为
-return_to_stage: none | theme | template | pattern-component | copy
-return_reason: 回退原因
-blocking_questions: 最多 3 个会改变当前阶段结论的问题
-post_questions: 不阻塞主体方案的问题
+product_id: aes
+delivery_scope: design
+current_stage: navigation | theme | template | pattern | feature | component | copy
+design_questions: []
+confirmed_upstream:
+  navigation_contract: {}
+  business_invariants: []
+  page_inventory: []
+  template_contracts: []
+  pattern_contracts: []
+  feature_contracts: []
+  prescribed_downstream_contracts: {}
+evidence:
+  requirement: []
+  existing_pages: []
+  project_code: []
 ```
 
-每一轮只更新当前阶段拥有的字段。下层不得覆盖 `business_invariants`，只能发现冲突并设置 `return_to_stage`。
-
-## 前端交付
-
-用户要求前端实现时：
-
-1. 重新读取命中的主题 Reference 和本次涉及的模板、业务处理及组件 Reference。
-2. 编辑前冻结 `business_invariants`、`interaction_contracts`、`form_state_contract` 和 `regression_scope`。
-3. 检查真实页面、路由、组件和代码实现；不得只按文字近似还原。
-4. 使用 iDux 组件前执行对应组件查询，不凭记忆猜 API。
-5. 修改完成后读取 `references/acceptance/frontend.md` 并执行运行验收。
-6. 只有验收返回 `status: passed` 才能声明完成；构建成功、资源 200 或代码存在不能代替行为验收。
-
-## 沟通规则
-
-- 每个阶段最多集中询问 3 个会改变该阶段结论的问题。
-- 先提供基于证据的推荐，不要求用户自行判断业务分类或页面类型。
-- 不重复询问已经确认的内容。
-- 不影响当前阶段成立的问题作为后置项，继续推进。
-- 用户在同一页面继续反馈时，从受影响的最低阶段重入；只有触及上层不变量时才向上回退。
+只处理 `current_stage` 和 `design_questions` 指向的事项。缺少会改变结论的信息时返回问题，不自行扩大任务范围。
 
 ## 输出契约
 
-最终输出至少包含：
+向 `prd-design-code` 返回当前层结果，不直接生成最终设计说明书：
 
-1. 命中的 AES 主题和业务结论
-2. 主题、框架、细则/组件各阶段实际使用的公共与 AES 规则
-3. AES 对公共规则的差异关系
-4. 页面结构、交互、组件和状态方案
-5. 文案交付时的术语校准结果
-6. 待确认项、Reference 缺口和自检结果
-7. 前端交付时的验收状态、失败项和证据
+```yaml
+aes_stage_result:
+  current_stage: navigation | theme | template | pattern | feature | component | copy
+  status: resolved | needs_common_design | needs_confirmation | blocked
+  matched_references: []
+  resolved_design_abilities:
+    - design_ability: ""
+      relation: inherit | extend | override
+      aes_references: []
+      matched_aes_rules: []
+      common_design_required: true | false
+      common_design_fallbacks: []
+      reference_gaps: []
+      conflicts: []
+  stage_contract:
+    navigation_contract: {}
+    theme_contract: {}
+    template_contract: {}
+    pattern_contract: {}
+    feature_contract: {}
+    component_contract: {}
+    copy_contract: {}
+  downstream_requirements:
+    next_stage: theme | template | pattern | feature | component | copy | complete
+    required_references: []
+    prescribed_downstream_contracts:
+      template: []
+      patterns: []
+      features: []
+      components: []
+      copy: []
+      unresolved_items: []
+    design_questions: []
+  return_to_stage: none | navigation | theme | template | pattern | feature | component | copy
+  return_reason: ""
+  common_design_fallbacks: []
+  reference_gaps: []
+  conflicts: []
+  blocking_questions: []
+```
+
+### 字段约束
+
+- 每项 `design_ability` 单独记录；未命中 AES Reference 的 Feature、Component 等能力才可填 `inherit`，Navigation 未涉及 Common Design 时不得机械填入 `inherit`。
+- `common_design_required` 按 AES 与 Common Design 的联合命中结果、当前阶段读取原则和具体 Reference 判定，不得由 `inherit / extend` 字面机械推导：AES 独占的 Navigation 业务事实、Theme、Feature、Component 可为 `false`；仅命中或需要补充 Common Design 时为 `true`；Copy 固定为 `true`；Template、Pattern 按双方命中结果和具体 Reference 的覆盖声明填写。
+- `override` 的 `common_design_required` 默认 `false`，只有正文明确要求补充具体事项时才可为 `true`。
+- `stage_contract` 只填当前层对应对象，其他对象留空；Theme 对下游的锁定方案统一写入 `downstream_requirements.prescribed_downstream_contracts`，不得混入其他层的 `stage_contract`。
+- 一般阶段的 `downstream_requirements` 只传递已确认结论及下一层待解决事项；Theme 命中时可以通过 `prescribed_downstream_contracts` 直接锁定下游决策，后续层不得重新选择。
+- `reference_gaps` 记录 AES 应定义但尚未定义的知识；不得伪装成 Common Design 可确定的事实。
+- `return_to_stage` 指向最早需要重算的层级。
+
+## 禁止事项
+
+- 不独立输出完整 PRD、设计说明书、HTML 或代码。
+- 不一次加载全部 AES Reference，不按文件名相似度猜测主题。
+- 不合并 Pattern、Feature、Component 为一个模糊阶段。
+- 不让 Template 直接选择具体组件，不让 Component 反推业务或页面方案。
+- 不用 Common Design 覆盖已命中的 AES 规则，也不将 AES 未说明的内容擅自定义为产品差异。
+- 不允许下层静默修改已确认的上层契约。
+- 不允许 Template、Pattern、Feature 或 Component 对 Theme 已锁定事项重新选型；不可执行时必须返回上游。
 
 ## 自检
 
-- 已从主题进入框架再进入细则/组件，没有一次加载全部规则
-- 公共与 AES 规则在每个命中层级成对合并，而非前后两套串行方案
-- 术语只在文案生成或检查时调用，没有参与业务与页面选型
-- 规则与策略使用不同主题模型
-- 下层没有覆盖主题业务不变量
-- 发生冲突时返回了正确上层，只重算受影响链路
-- AES 未覆盖处继续使用公共规则，没有擅造产品差异
-- 前端交付已执行真实页面检查和运行验收
+- 当前只处理一个层级，且已使用该层 Index 路由。
+- Template、Pattern、Feature、Component 的输出边界没有混用。
+- Theme 已锁定的下游事项均被直接执行，只有 `unresolved_items` 进入下游决策。
+- 已逐项记录 `inherit / extend / override` 和具体知识来源。
+- `override` 缺口没有自动回退 Common Design。
+- 只读取本次命中的 Reference；需要重算时已返回正确上层。
+- Copy 在业务与方案确定后调用。
