@@ -1,0 +1,7 @@
+interface:
+  display_name: "AES 产品设计 Skill"
+  short_description: "为 prd-design-code 提供分层 AES 设计知识"
+  default_prompt: "Use $aes-product-design as the AES knowledge source orchestrated by prd-design-code. Resolve only the current Navigation, Theme, Template, Pattern, Feature, Component, or Copy stage; apply Coverage per design ability and return explicit Common Design fallbacks, AES gaps, and upstream return conditions."
+
+policy:
+  allow_implicit_invocation: true
