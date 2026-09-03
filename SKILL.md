@@ -3,11 +3,11 @@ name: aes-product-design
 description: 提供 AES（深信服下一代端点安全）专属业务设计规范与设计知识，包括产品定位、业务对象、导航、主题、页面模板、Pattern、Feature、Component、交互规则、产品术语与已有资产复用规则；供 prd-design-code 在 AES 需求设计和页面规划阶段按需读取
 metadata:
   skill_type: product-design
-  product_id: aes
+  product_id: aes,dr
   scope: b2b-product-design
   capability: product-design-knowledge
   inherits: common-design
-  version: "1.2"
+  version: "1.3"
 ---
 
 # AES Product Design

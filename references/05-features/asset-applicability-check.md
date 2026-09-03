@@ -123,3 +123,19 @@ feature_contract:
 - 更换检测对象后不存在上一资产的残留结果。
 - 已区分资产无结果、无适用项、检索失败和检测失败。
 - 规则场景只替换业务实体与结果字段，没有重新设计检测流程。
+
+## 前端参考基准
+
+实现资产适用性检测时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+
+- 公共弹窗入口：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/index.ts`
+- 检测弹窗实现：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/src/index.vue`
+- 公共业务导出：`app/app-lib/src/business-comp/policy_common/index.ts`
+- 资产查询和检测结果请求类型：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/src/types.ts`
+
+优先参考以下真实页面：
+
+- 安全策略列表：`app/aes-policy/src/view/mod_policy/components/policy_table.vue`
+- 升级策略列表：`app/aes-agent/src/view/upgrade_manage/components/upgrade_strategy_table.vue`
+
+列表入口应复用 `AES__APP_LIB/PolicyCommon` 的 `CheckPolicyModal`，并由业务页面注入资产列表、策略/规则关联结果和详情跳转配置。不得在业务页面重新实现检测弹窗、资产检索状态或“开始检测”流程。参考代码前必须核对目标分支中的弹窗 Props、API 配置和结果字段，不得根据 Feature 线框图虚构接口或组件属性。

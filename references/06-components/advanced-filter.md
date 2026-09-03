@@ -10,3 +10,24 @@
 - 关键时间可作为默认条件；不可清除的默认条件必须始终保留。
 - 存在检索按钮时，编辑条件后点击检索才提交。
 - 执行检索后回到第一页，并保留当前排序。
+
+## 前端参考基准
+
+实现高级筛选时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+
+- 组件源码：`app/app-lib/src/business-comp/condition_search/`
+- 公开入口：`app/app-lib/src/business-comp/condition_search/index.ts`
+- 字段类型：`app/app-lib/src/business-comp/condition_search/types/fields.ts`
+- 表格接入：`app/app-lib/src/business-comp/table_container/src/TableContainer.vue`
+- 表格配置类型：`app/app-lib/src/business-comp/table_container/src/types/container.ts`
+
+优先参考以下真实页面：
+
+- 安全事件列表：`app/aes-incident/src/view/mod_sec_event/event_table/`
+- 告警列表：`app/aes-incident/src/view/mod_sec_alert/alert_list/`
+- 日志调查：`app/aes-incident/src/view/mod_log_analysis/`
+- 病毒列表：`app/aes-virus/src/view/virus_list/`
+
+列表页面优先通过 `AES__APP_LIB/TableContainer` 的 `search.conditionSearch` 接入，不重新拼装筛选区域。非表格场景才直接使用 `AES__APP_LIB/ConditionSearch`。
+
+参考代码前必须核对目标分支中的公开类型和实际调用，不得根据文档虚构字段类型、Props、Events 或实例方法。

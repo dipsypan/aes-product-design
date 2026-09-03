@@ -18,7 +18,6 @@ Feature 是已经确定采用后可完整执行的单项方案。它可以包含
 | `hierarchy-ellipsis` | 多级路径在空间不足时的省略与完整查看 | [`hierarchy-ellipsis.md`](hierarchy-ellipsis.md) |
 | `link-navigation` | 当前页文字链和新标签页跳转 | [`link-navigation.md`](link-navigation.md) |
 | `info-icon` | 小 i 信息提示的展示和交互 | [`info-icon.md`](info-icon.md) |
-| `input-number-range-tip` | 数字输入范围 Tooltip | [`input-number-range-tip.md`](input-number-range-tip.md) |
 | `file-size-display` | 文件大小换算、精度、单位和异常值 | [`file-size-display.md`](file-size-display.md) |
 | `contextual-remark-default` | 任务和规则跨模块快速新增时回填备注 | [`contextual-remark-default.md`](contextual-remark-default.md) |
 

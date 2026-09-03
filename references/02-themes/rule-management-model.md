@@ -42,10 +42,7 @@
 | --- | --- | --- |
 | 规则用途 | `allowlist` / `blocklist` / `other` | 决定响应动作、告警和生效语义 |
 | 匹配结构 | `subject` / `condition-combination` | 决定匹配内容结构、规则数量语义、名称与描述提案 |
-| 条件展示结构 | `flat` / `entity-grouped` / `entity-related` | 决定条件平铺展示，或按对象卡片展示 |
-| 条件组能力 | `single-group` / `nested-groups` | 决定是否可以新增条件组以及是否允许嵌套 |
-| 对象数量 | `fixed` / `user-expandable` | 决定对象卡片数量是否固定 |
-| 对象关系模式 | `none` / `locked` / `user-adjustable` | 决定是否展示对象关系，以及关系是否可调整 |
+| 条件编辑模式 | `simple-flat` / `logical-groups` / `entity-cards` | 决定使用简单动态条件、复杂条件组或对象卡片 |
 | 响应动作 | `allow` / `block` / `detect` / `custom` | 页面统一称“响应动作”；多个动作写入 `allowed_values` |
 | 告警信息 | 适用性、是否需要、字段集合 | 决定告警区域和相关列表字段 |
 | 生效范围 | `fixed-global` / `configurable` | 可配置时强制调用 `asset-scope` |
@@ -58,21 +55,9 @@
 rule_decision:
   rule_intent: { value: allowlist | blocklist | other, confirmed: true | false }
   match_mode: { value: subject | condition-combination, confirmed: true | false }
-  condition_presentation:
-    value: flat | entity-grouped | entity-related | ""
+  condition_editor:
+    mode: simple-flat | logical-groups | entity-cards | ""
     confirmed: true | false
-  condition_group_capability:
-    value: single-group | nested-groups | ""
-    confirmed: true | false
-  entity_model:
-    count_mode: fixed | user-expandable | ""
-    min_objects: 0
-    max_objects: null
-    confirmed: true | false
-  entity_relation_mode:
-    value: none | locked | user-adjustable | ""
-    confirmed: true | false
-    relations: []
   response_action:
     mode: fixed | configurable
     value: allow | block | detect | custom | ""
@@ -102,24 +87,18 @@ rule_decision:
     visible: true
     content_fields: [rule_purpose, current_count, count_limit]
     confirmed: true | false
- confirmation_items: []
+  confirmation_items: []
 ```
 
 约束：
 
 - `response_action.mode=configurable` 时，`allowed_values` 必须非空；固定动作使用 `value`，不得让下游重新补动作选项。
 - `alert_config.applicable=true` 时必须继续确认 `required` 和 `fields`；三项不完整前不得生成告警字段或交互。
-- `match_mode.value=condition-combination` 时必须确认 `condition_presentation` 和 `condition_group_capability`；未确认前不得生成对应条件结构或条件组交互。
-- `condition_presentation=flat` 表示不按对象分组，不表示不支持条件组；是否能新增条件组由 `condition_group_capability` 决定。
-- `condition_presentation=entity-grouped` 表示按对象卡片分组，但不要求存在对象之间的业务关系；`entity-related` 才要求定义对象关系。
-- 对象名称、角色、数量和字段归属来自需求，不得默认命名为主体和客体。
-- `entity_model.count_mode=user-expandable` 时必须提供添加对象卡片入口；`fixed` 时不得生成该入口。
-- `entity_relation_mode=locked` 时关系静态展示且不可修改；`user-adjustable` 时只能从已确认的关系集合中选择；`none` 时不生成关系展示器。
+- `match_mode.value=condition-combination` 时必须确认 `condition_editor.mode`，并强制读取 `../04-patterns/condition-expression-editor.md`。Theme 锁定模式和业务参数后，Pattern 只执行。
+- 没有多对象语义且不需要条件组或可调 AND/OR 时，提案 `simple-flat`；需要多条件组或组级 AND/OR 时提案 `logical-groups`；需要强调多对象边界或对象关系时提案 `entity-cards`。用户指定结果优先。
 - `match_mode=condition-combination` 时，规则名称和规则描述作为一组命名规则元数据；规则描述承担规则说明作用，不再生成备注。
 - `match_mode=subject` 时，不生成规则名称、规则 ID 或规则描述；生成主体字段和备注，备注供管理员记录注意事项。
-- 单条条件内部使用 `condition_operator`（如 `equals`、`contains`、`in`）；条件组成员之间使用统一的 `AND` 或 `OR`；对象卡片之间使用 `entity_relation`。三者不得混淆。
-- 每个条件组只有一个统一的 `AND` 或 `OR`，不得为每条条件生成独立关系选择器。
-- 未确认展示结构、条件组能力、对象数量或对象关系时，进入 `confirmation_items`；不得由 Pattern 或 Component 自行补齐。
+- 字段目录、操作符集合、组关系权限、对象语义、空表达式语义和业务校验必须来自 PRD 或用户确认；未知项进入 `confirmation_items`，不得由 Pattern 或 Component 自行补齐。
 - `detail.user_requested=true` 是生成详情的唯一条件。其他原因只能形成是否需要详情的确认项，不得自行生成。
 - `data_transfer.import` 和 `data_transfer.export` 只记录 Theme 基于需求信号给出的提案，不代表已启用；是否提供必须由用户确认。
 - 用户确认启用导入或导出后，才读取对应的 `../05-features/import.md` 或 `../05-features/export.md`（当前能力文档为 Feature；不得另造一套导入/导出流程）。未确认时不得生成对应入口或下游能力契约。
@@ -380,7 +359,7 @@ list_field_proposal:
 1. 读取 `../03-templates/form.md`，执行锁定的 `modal + contextual + single-surface`。
 2. 读取 `../04-patterns/form-management.md`，按用户确认的表单字段、依赖、校验、状态和提交保护执行，不重新选择容器或流程结构。
 3. `asset_scope=configurable` 时读取 `../05-features/asset-scope.md`；单主体快速新增时读取 `../05-features/contextual-remark-default.md`。
-4. 行为组合模式读取第 5.4 节锁定的动态条件组件契约；Component 层只验证和映射。
+4. 行为组合模式先按第 5.4 节形成并锁定条件表达式输入，再读取 `../04-patterns/condition-expression-editor.md` 执行选定模式；Pattern 与 Component 层不得重新选型或改写业务参数。
 
 ### 5.2 表单字段提案与顺序
 
@@ -412,126 +391,63 @@ list_field_proposal:
 
 ### 5.4 行为组合表单
 
-行为组合表单用于配置一条完整条件表达式。基础字段、字段提案与顺序、响应动作、告警、资产和过期时间继续执行前述章节，本节只定义匹配条件区域。备注仅属于单主体表单，不属于行为组合表单。
+行为组合表单用于配置一条完整条件表达式。基础字段、字段提案与顺序、响应动作、告警、资产和过期时间继续执行前述章节；规则配置内容必须作为独立的“规则内容”表单分组呈现。行为组合使用规则名称和规则描述，不生成备注。
 
-#### 5.4.1 三类独立概念
-
-```text
-单条条件内部：condition_operator
-条件组成员之间：group_relation
-对象卡片之间：entity_relation
-```
-
-- `condition_operator` 连接字段和值，例如 `equals`、`contains`、`in`、`not_in`、`is_empty`；不得使用 `AND` 或 `OR`。
-- `group_relation` 连接同一条件组中的条件或子条件组；每个条件组只有一个统一的 `AND` 或 `OR`。
-- `entity_relation` 连接对象卡片，描述对象之间的业务关系；不得替代 `group_relation`。
-
-#### 5.4.2 条件基础契约
+Theme 必须先根据第 2 节结论形成以下锁定输入，再调用 `../04-patterns/condition-expression-editor.md`。不适用于当前模式的字段使用空值，不得由 Pattern 或 Component 猜测业务事实：
 
 ```yaml
-condition:
-  field: ""
-  operator: ""
-  value: {}
-  allowed_operators: []
-
-condition_group:
-  key: ""
-  relation: AND | OR
-  relation_editability: locked | user-adjustable
-  allowed_relations: []
-  items:
-    - condition | condition_group
+condition_expression_contract:
+  purpose: rule-match
+  editor_mode:
+    value: simple-flat | logical-groups | entity-cards
+    decision_source: user | theme | business-reference
+    decision_locked: true
+  field_catalog: []
+  group_contract:
+    max_group_levels: 2
+    level_source: pattern-default | user | theme
+    root_group:
+      relation: AND | OR | ""
+      relation_editability: locked | user-adjustable | ""
+      allowed_relations: []
+    child_group:
+      relation: AND | OR | ""
+      relation_editability: locked | user-adjustable | ""
+      allowed_relations: []
+  entity_contract:
+    count_mode: fixed | user-expandable | none
+    min_objects: 0
+    max_objects: null
+    entity_cards: []
+    entity_relations: []
+  empty_expression:
+    mode: forbidden | match-all
+    decision_source: user | theme | business-reference
+    confirmed: true | false
+    runtime_confirmation: required | not-required
+    display_message: ""
+  limits:
+    max_conditions_per_group: null
+    max_groups: null
+    max_total_conditions: null
+  business_validation:
+    - duplicate-rule
+    - rule-conflict
+    - unsupported-expression
+    - unsupported-entity-relation
+  submission:
+    output: structured-expression
+    business_semantics: one-expression-one-rule
 ```
 
-`relation` 只连接当前条件组的直接成员；不允许在每条条件行上单独选择 `AND` 或 `OR`。
+锁定要求：
 
-#### 5.4.3 平铺条件结构
-
-当 `rule_decision.condition_presentation.value=flat` 时，所有条件位于一个根条件组中。平铺只表示不按对象分组，不表示不支持条件组。
-
-```text
-根条件组：AND
-├── 条件 1
-├── 条件 2
-├── 条件 3
-├── 新增条件
-└── 新增条件组（按 condition_group_capability 决定）
-```
-
-- 不生成对象卡片、主体/客体标题或对象关系展示器。
-- `single-group` 只允许根条件组，不显示新增条件组。
-- `nested-groups` 允许新增条件组和嵌套条件组。
-- 根条件组和每个子条件组分别拥有一个统一的 `AND` 或 `OR`。
-- 条件组关系使用当前组左侧的垂直连接轨道和 `AND` / `OR` 标签展示；连接器覆盖当前组的直接成员范围。
-- 当前组只有一个直接成员时隐藏连接器；有两个及以上直接成员时显示连接器。
-
-#### 5.4.4 对象卡片结构
-
-当用户需求明确要求按对象组织条件时，使用 `entity-grouped`；当需求还要求表达对象之间的业务关系时，使用 `entity-related`。
-
-```yaml
-entity_group:
-  key: ""
-  label: ""
-  role: ""
-  required: true | false
-  allowed_fields: []
-  root_group:
-    relation: AND | OR
-    relation_editability: locked | user-adjustable
-    allowed_relations: []
-```
-
-- 对象名称、角色和字段归属由需求定义，不默认命名为主体和客体。
-- 需求明确对象数量时使用 `count_mode=fixed`；不限制数量时使用 `count_mode=user-expandable`，在底部显示“添加对象卡片”。
-- 新增对象后，必须配置该对象的字段、根条件组和必要的对象关系。
-- 每个对象卡片内部都是一个条件组容器，同样支持新增条件和新增条件组；是否支持嵌套由 `condition_group_capability` 决定。
-- 对象卡片内部的 `AND / OR` 不改变对象之间的关系。
-- 对象卡片内的条件组连接器仍位于该条件组左侧，父对象或其他对象不得复用该连接器。
-
-#### 5.4.5 对象关系展示器
-
-只有 `condition_presentation.value=entity-related` 且对象关系模式不是 `none` 时，才生成对象关系展示器。
-
-```yaml
-entity_relation:
-  relation_key: ""
-  from: entity_group_key
-  to: entity_group_key
-  display_mode: inline-type-tag | connector
-  display_source: builtin | behavior_type | user-relation
-  display_symbol: ""
-  display_label: ""
-  editability: locked | user-adjustable
-  allowed_relations: []
-```
-
-`locked` 时，关系标签、连接符和方向来自内置类型或 Theme，静态展示，不生成选择器。`user-adjustable` 时，用户逐条选择关系，但只能使用 `allowed_relations`；不得改变对象端点、对象顺序、对象角色或字段归属。对象关系展示器与条件组连接器是两个独立视觉层，不得互相替代。
-
-#### 5.4.6 条件组交互
-
-- 条件行和条件组锁定使用 `IxProFormList`；
-- 同一条件内“字段 → 操作符 → 值”的联动锁定使用 `IxProFormDependency`；
-- `IxProFormList` 管理条件行和条件组的新增、删除、嵌套和排序；
-- `IxProFormDependency` 只负责当前条件内字段、操作符和值的联动渲染与重新校验；
-- `IxProFormDependency.names` 使用依赖字段路径数组；条件行内使用本行局部依赖范围；
-- 依赖插槽参数只负责依赖渲染和重新校验，不作为条件列表数据容器；
-- 条件组关系标签位于当前组直接成员之间的左侧垂直连接轨道上；子条件组使用自己的连接轨道；
-- 关系切换只修改当前条件组的 `relation`，不清空条件值、不改变其他组、不改变对象关系；
-- 只有 `relation_editability=user-adjustable` 时才渲染 `AND / OR` 切换控件；锁定关系只显示当前值；
-- 删除后不得留下空条件或空条件组；
-- 只有一个条件或条件组时不展示无意义的连接关系。
-
-#### 5.4.7 校验与提交
-
-- 切换字段或操作符后，立即清理不兼容值、校验状态和提交残值；多值操作符按字段格式逐项处理；
-- 校验字段与操作符兼容性、值格式、对象数量、空组、必填对象、重复条件和明显矛盾；
-- 服务端校验语义重复、规则冲突、不支持的对象关系和不支持的表达式；
-- 完整表达式只提交为一条规则；失败时保留表达式并定位错误；
-- 行为组合不使用单主体的部分成功语义。
-- 只有条件组存在两个及以上直接成员时才显示该组的 AND / OR；
-- 新增条件或条件组追加到当前作用域，不能改变父组的关系；
+- `editor_mode.value` 必须与 `rule_decision.condition_editor.mode` 一致；模式选择和三种模式的具体呈现、AND/OR 位置、动态组件、联动、嵌套、对象关系与空表达式交互均由 `condition-expression-editor.md` 唯一解释。
+- `field_catalog` 必须给出字段、允许的条件运算符、值控件、校验和提示；组关系是否可调、允许值、对象卡片及对象关系只按需求或用户确认填写。
+- 默认最多两层条件组；只有用户明确指定更高的有限层级时才修改 `max_group_levels`，不得允许无限嵌套。
+- 默认不允许空表达式。只有用户确认“空表达式代表任意条件均匹配”时才锁定为 `match-all`，并保留删除最后一个有效条件前的运行时确认。
+- 无论包含多少条件、条件组或对象卡片，完整表达式只生成并提交一条规则，不得拆成多条列表记录，也不使用单主体的部分成功语义。
+- Pattern 负责表达式结构与输入校验；规则重复、规则冲突、不支持的表达式和对象关系由规则业务服务校验。提交失败时保留完整表达式并定位错误。
 
 ### 5.5 响应动作、告警、资产与过期
 
@@ -612,6 +528,7 @@ prescribed_downstream_contracts:
     - { contract_id: table-management, locked: true, values: { table_task: manage, column_contract: list_field_contract.final_columns } }
     - { contract_id: form-management, locked: true, values: { fields_source: create_form_contract.final_fields | edit_form_contract.final_fields } }
     - { contract_id: page-notice, locked: true, values: { visible: true, content_source: rule_decision.notice } }
+    - { contract_id: condition-expression-editor, locked: true, enabled_when: rule_decision.match_mode.value=condition-combination, values: condition_expression_contract }
   features:
     - { contract_id: table-selection, locked: true, enabled_when: bulk_operations_confirmed }
     - { contract_id: import, locked: true, enabled_when: rule_decision.data_transfer.import.user_decision=enabled, source: ../05-features/import.md }
@@ -619,11 +536,7 @@ prescribed_downstream_contracts:
     - { contract_id: asset-scope, locked: true, enabled_when: rule_decision.asset_scope.value=configurable, values: { required_semantics: [assigned, excluded, effective] } }
     - { contract_id: asset-applicability-check, locked: true, enabled_when: rule_decision.asset_scope.value=configurable }
     - { contract_id: contextual-remark-default, locked: true, enabled_when: entry_type=quick-create and rule_decision.match_mode.value=subject }
-  components:
-    - { contract_id: condition-list, locked: true, enabled_when: rule_decision.match_mode.value=condition-combination, values: { component: IxProFormList, condition_structure: rule_decision.condition_presentation.value, group_capability: rule_decision.condition_group_capability.value } }
-    - { contract_id: condition-dependency, locked: true, enabled_when: rule_decision.match_mode.value=condition-combination, values: { component: IxProFormDependency, dependency_scope: condition-row, condition_operator_source: condition_contract } }
-    - { contract_id: entity-card, locked: true, enabled_when: rule_decision.condition_presentation.value in [entity-grouped, entity-related], values: { entity_model: rule_decision.entity_model } }
-    - { contract_id: entity-relation, locked: true, enabled_when: rule_decision.condition_presentation.value=entity-related, values: { relation_mode: rule_decision.entity_relation_mode, relations: rule_decision.entity_relation_mode.relations } }
+  components: []
   copy:
     - { contract_id: rule-terminology, locked: true, values: AES terminology }
   unresolved_items: []
@@ -648,11 +561,9 @@ prescribed_downstream_contracts:
 准出前确认：
 
 - `rule_decision` 完整，未知事实已进入 `confirmation_items`；
-- 条件组合已确认 `condition_presentation` 和 `condition_group_capability`；平铺型仍可按条件组能力新增条件组；
-- 单条条件使用条件运算符，条件组使用统一的 `AND` 或 `OR`，对象卡片之间使用对象关系，三者没有混用；
-- 实体分组型已声明对象分组、对象数量和字段归属；实体关系型已声明对象关系、展示方式与 `editability`；无对象关系需求时不得生成关系展示器；
-- 对象数量未限制时已提供添加对象卡片入口；固定对象数量时不得生成该入口；
-- 条件行和条件组锁定使用 `IxProFormList`；同一条件内“字段 → 操作符 → 值”的联动锁定使用 `IxProFormDependency`；
+- 条件组合已确认 `condition_editor.mode`，并已形成完整、锁定的 `condition_expression_contract`；
+- 条件编辑模式、字段目录、关系权限、对象语义、空表达式语义和业务校验均有明确来源，Pattern 未重新决策；
+- 完整条件表达式只提交为一条规则，不使用单主体的部分成功语义；
 - 已先输出 `page_inventory`，再分别完成列表、新增、编辑和条件详情的页面契约；
 - 列表列、表单字段和详情字段分别有明确契约，共享语义但没有混成一张页面表；
 - 列表先读取 List Template，再读取 Filtering 并完成提案、用户确认和最终锁定，之后按顺序读取 Page Notice、Table Management 和 Table Selection 执行页面区域；
@@ -680,6 +591,7 @@ aes_stage_result:
       theme_resolution: { matched_theme: rule-management, common_theme_required: false }
       rule_decision: {}
       page_inventory: {}
+      condition_expression_contract: {}
       list_contract:
         filter_contract:
           proposal: {}
@@ -705,6 +617,7 @@ aes_stage_result:
       - { reference: ../04-patterns/table-management.md, enabled_when: always }
       - { reference: ../04-patterns/form-management.md, enabled_when: always }
       - { reference: ../04-patterns/page-notice.md, enabled_when: always }
+      - { reference: ../04-patterns/condition-expression-editor.md, enabled_when: rule_decision.match_mode.value=condition-combination }
       - { reference: ../04-patterns/tiered-confirmation.md, enabled_when: delete-or-status-operation }
       - { reference: ../05-features/table-selection.md, enabled_when: bulk_operations_confirmed }
       - { reference: ../05-features/import.md, enabled_when: rule_decision.data_transfer.import.user_decision=enabled }

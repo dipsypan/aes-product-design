@@ -1,6 +1,6 @@
-# AES 数字输入范围提示 Feature
+# AES 数字输入范围提示组件
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属组件映射，不作为 Common Design 的通用组件规范。本组件能力整体采用 AES `override`；本文定义的规则直接以 AES 为准，未登记的其他组件能力才由 `prd-design-code` 调用 Common Design 或依据项目已有代码处理。
 
 本 Reference 只补充 AES 对 IDUX `InputNumber` 的差异，不重复定义组件本身的 API、数值输入、步进和校验能力。
 
@@ -58,3 +58,16 @@
 - 失焦后 Tooltip 关闭，且不会遮挡其他表单内容。
 - `invalid` 状态下错误提示优先，范围 Tooltip 不叠加。
 - 固定单位、输入框和相邻文案保持同一逻辑行，Tooltip 不改变布局。
+
+## 前端参考基准
+
+数字输入范围提示当前以 `IxTooltip`、`IxInputNumber` 与 ProForm 校验状态组合实现。实现时以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+
+- 任务中心病毒任务执行计划：`app/aes-task/src/view/task_create/components/virus_task/components/execution_plan_modal.vue`
+- 任务中心病毒任务高级设置：`app/aes-task/src/view/task_create/components/virus_task/advanced_settings.vue`
+- 终端列表病毒查杀执行计划：`app/aes-agent/src/view/agent_list/components/virus_scan_modal/components/execution_plan_modal.vue`
+- 终端列表病毒查杀高级设置：`app/aes-agent/src/view/agent_list/components/virus_scan_modal/advanced_settings.vue`
+
+优先参考“扫描时长限制”和“错过开始时间的补扫时长”的实现：使用 `IxTooltip placement="bottomStart" trigger="click"` 包裹 `IxInputNumber`，并在 ProForm 控件状态为 `invalid` 时不提供范围提示内容，由表单校验提示接管。
+
+本 Component Reference 规定数字范围提示的 AES 组件组合基准，但不将上述页面内的局部实现虚构为独立公共组件或稳定 API。编码前必须核对目标分支中 `IxInputNumber` 的实际 `min`、`max`、单位、校验器和错误状态，提示文案必须与这些约束一致。

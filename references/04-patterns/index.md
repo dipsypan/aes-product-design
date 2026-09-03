@@ -13,6 +13,7 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 | `table-management` | 在列表、详情、表单、Modal 或 Drawer 中按宿主上下文组合表格内部能力 | [`table-management.md`](table-management.md) |
 | `page-notice` | 上游未锁定时决定是否展示；锁定后执行内容结构和位置 | [`page-notice.md`](page-notice.md) |
 | `form-management` | 组合字段组织、控件形态、依赖、校验、状态和提交保护 | [`form-management.md`](form-management.md) |
+| `condition-expression-editor` | 在简单平铺、复杂条件组和对象卡片之间选择；执行条件行、AND/OR、对象关系和动态联动 | [`condition-expression-editor.md`](condition-expression-editor.md) |
 | `filtering` | 上游未锁定时选择筛选方式；锁定后执行对应模式 | [`filtering.md`](filtering.md) |
 | `action-eligibility` | 根据对象可执行性决定启用、部分执行或阻断 | [`action-eligibility.md`](action-eligibility.md) |
 | `confirmation` | 根据风险、既有承载和数量选择确认等级与容器 | [`tiered-confirmation.md`](tiered-confirmation.md) |

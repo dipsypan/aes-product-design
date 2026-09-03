@@ -51,7 +51,7 @@ form_pattern_input:
 | 策略或规则自身的启用/禁用状态 | Radio，文案使用“启用 / 禁用” |
 | 单一参数是否生效且无下属配置 | Checkbox |
 | 资产适用或执行范围 | 调用 `../05-features/asset-scope.md` |
-| 有明确数值范围且输入时需持续知晓 | 调用 `../05-features/input-number-range-tip.md` |
+| 有明确数值范围且输入时需持续知晓 | 调用 `../06-components/input-number-range-tip.md` |
 
 当多个控件都合理且选择会显著影响任务效率时，记录决策依据；缺少关键输入时返回待确认，不按个人偏好选型。
 

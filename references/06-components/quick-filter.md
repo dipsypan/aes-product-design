@@ -19,3 +19,25 @@
 ```text
 [快速筛选]    [请输入名称或 ID]    [批量搜索（可选）]
 ```
+
+## 前端参考基准
+
+实现快速筛选时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+
+- 组件源码：`app/app-lib/src/business-comp/quick_filter_layer/`
+- 公开入口：`app/app-lib/src/business-comp/quick_filter_layer/index.ts`
+- 主组件：`app/app-lib/src/business-comp/quick_filter_layer/src/QuickFilterSelector.vue`
+- 表格组合实现：`app/app-lib/src/business-comp/table_container/src/components/QuickSearchFilter.vue`
+- 查询状态处理：`app/app-lib/src/business-comp/table_container/src/composables/useQuickSearchPanel.ts`
+- 条件回显：`app/app-lib/src/business-comp/selected_condition_group/`
+
+优先参考以下真实页面：
+
+- 策略列表：`app/aes-policy/src/view/mod_policy/components/policy_table.vue`
+- 白名单列表：`app/aes-policy/src/view/mod_whitelist_management/`
+- 任务列表：`app/aes-task/src/view/task_list/`
+- 定时任务列表：`app/aes-task/src/view/scheduled_tasks/`
+
+列表页面优先通过 `AES__APP_LIB/TableContainer` 的 `search.quickSearchFilter` 接入，由表格容器组合快速筛选、关键词搜索、批量搜索和条件回显。非表格场景才直接使用 `AES__APP_LIB/QuickFilterLayer`。
+
+快速筛选仍在封装中。AI 编码时必须核对目标分支中的 `QuickFilterSelector.vue` 和实际业务调用，不得将内部 Button、Popover、Panel 或尚未稳定的类型声明当作正式公共 API。

@@ -145,3 +145,24 @@ Theme 或用户已经锁定使用本 Feature 时直接完整执行，不得重�
 - 三个资产列均可点击打开资产详情抽屉。
 - 抽屉支持查看分配、排除和生效资产。
 - 同一页面不混用“适用对象”“适用资产”“执行对象”“执行资产”以外的旧表述。
+
+## 前端参考基准
+
+实现资产范围时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+
+- 策略/白名单表单组合：`app/app-lib/src/business-comp/policy_common/object_form/src/index.vue`
+- 资产选择器入口：`app/app-lib/src/business-comp/group_asset_selector/index.ts`
+- 资产选择器表单项：`app/app-lib/src/business-comp/group_asset_selector/components/AssetSelectorFormItem.vue`
+- 资产与资产组选择主体：`app/app-lib/src/business-comp/group_asset_selector/components/GroupAssetSelector.vue`
+- 分配、排除和生效资产展示：`app/app-lib/src/business-comp/asset_tags/`、`app/app-lib/src/business-comp/effective_tags/`
+- 资产详情抽屉：`app/app-lib/src/business-comp/policy_assets_drawer/`
+
+优先参考以下真实页面：
+
+- 策略配置页面：`app/aes-policy/src/view/mod_policy/policy_config/index.vue`
+- 策略列表资产列：`app/aes-policy/src/view/mod_policy/components/policy_table.vue`
+- 升级策略配置：`app/aes-agent/src/view/upgrade_manage/upgrade_strategy_config/index.vue`
+- 任务执行对象：`app/aes-task/src/view/task_create/components/virus_task/execution_object.vue`
+- 任务列表资产列：`app/aes-task/src/view/task_list/index.vue`
+
+表单配置优先复用 `AES__APP_LIB/GroupAssetSelector` 的 `AssetSelectorFormItem`；列表展示优先复用 `AES__APP_LIB/AssetTags`、`AES__APP_LIB/EffectiveTags` 和 `AES__APP_LIB/PolicyAssetsDrawer`。参考代码前必须核对目标分支中的范围字段、组件属性和数据转换逻辑，不得仅根据“分配资产 - 排除资产”的文案自行推断接口结构或生效资产计算方式。
