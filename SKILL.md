@@ -108,6 +108,8 @@ Coverage 只决定当前阶段命中的具体设计能力如何联合读取 AES 
 
 首次进入本 Skill 时读取 `references/index.md`。之后只读取 `current_stage` 对应的 AES 层 Index，并由 `prd-design-code` 同步匹配 Common Design 当前层路由和具体 Reference；依据双方命中结果与具体 Coverage 决定来源，不递归加载全部文件。
 
+读取各层 Index 只表示完成能力发现，不表示已完成该层设计。根据需求命中 Index 中的条目后，必须继续读取该条目链接的具体 Reference；仅读取 Index 时不得输出设计结论。
+
 每层按以下顺序执行；每个阶段是否进入、是否读取 AES/Common Design、是否合并以及返回哪一层，由双方命中结果和上游契约共同决定：
 
 ```text
