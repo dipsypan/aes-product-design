@@ -1,6 +1,8 @@
 # AES 文件大小显示 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 调用场景
 
@@ -11,6 +13,12 @@
 `数值 + 1个半角空格 + 单位`
 
 示例：`512 B`、`18.3 MB`
+
+## Feature 身份与封装
+
+- `featureId: file-size-display`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
 
 ## 2. 换算规则
 

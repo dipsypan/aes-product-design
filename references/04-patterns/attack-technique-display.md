@@ -1,6 +1,8 @@
 # AES ATT&CK 战术技术展示 Pattern
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 组件定义
 
@@ -219,8 +221,23 @@
 ## 7. 实现约束
 
 - 合并模式使用同一个表格单元格完成上下布局。
-- 多项明细使用项目统一的 `IxPopover` 或等价浮层。
+- 多项明细使用项目统一的浮层能力；具体组件入口由 Component 层核验，未封装时使用等价浮层实现。
 - 技术外链在新标签页打开，并使用 `target="_blank"` 和 `rel="noopener noreferrer"`。
 - 摘要数量必须在展示前完成去重计算。
 - 技术链接点击不得触发行点击、浮层切换或其他表格操作。
 - 外链图标使用项目图标库，`↗` 不作为页面实际字符输出。
+
+## 输出契约
+
+```yaml
+pattern_contract:
+  pattern_id: attack-technique-display
+  decision_inputs: [tactic_count, technique_count, display_context, link_requirement]
+  selected_solution: merged | separated
+  required_features: [link-navigation]
+  required_components: []
+  component_notes: ATT&CK 展示和浮层能力按项目现有组件或等价实现核验
+  return_to_template: false
+  return_reason: ""
+  pattern_gaps: []
+```

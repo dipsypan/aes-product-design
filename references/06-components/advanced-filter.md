@@ -1,8 +1,32 @@
 # AES 高级筛选组件
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属组件映射，不作为 Common Design 的通用组件规范。本组件能力整体采用 AES `override`；本文定义的规则直接以 AES 为准，未登记的其他组件能力才由 `prd-design-code` 调用 Common Design 或依据项目已有代码处理。页面应在高级筛选、快速筛选和简单平铺筛选之间如何选择，由 `../04-patterns/filtering.md` 定义。
+> `Coverage: extend`
 
-## 高级筛选
+> **归属：AES Product Design。** 本 Reference 是 AES 产线专属组件映射，不作为 Common Design 的通用组件规范。页面在高级筛选、快速筛选和简单平铺筛选之间如何选择，由 [`../04-patterns/filtering.md`](../04-patterns/filtering.md) 定义。
+
+## 使用条件
+
+- 仅当业务需要可组合的高级检索条件时使用。
+- 是否选择高级筛选由 [`../04-patterns/filtering.md`](../04-patterns/filtering.md) 决定。
+
+## 不适用与禁止事项
+
+- 已选择快速筛选或简单平铺筛选时，不重复生成高级筛选。
+- 不得把组件内部的字段、操作符或默认值当作业务事实。
+
+## Component 身份
+
+- `componentId: ConditionSearch`
+- `encapsulation: true`
+- 组件能力：高级筛选区域
+
+## 复用契约
+
+- 典型接入方式：表格容器的 `search.conditionSearch`
+- 封装负责筛选区域的基础布局和通用交互；编码阶段必须核验目标分支的实际导出名、路径、Props、Events 和调用方式。
+- `componentId` 只代表前端封装入口，不改变本 Reference 的筛选业务规则。
+
+## 设计规则
 
 - 用于承载可组合的高级检索条件，不与快速筛选重复生成。
 - 检索字段、操作符、默认条件、时间快捷范围和最大跨度由业务 Reference 或远程配置提供。
@@ -11,23 +35,17 @@
 - 存在检索按钮时，编辑条件后点击检索才提交。
 - 执行检索后回到第一页，并保留当前排序。
 
-## 前端参考基准
+## 业务补充
 
-实现高级筛选时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+以下内容不能由 `ConditionSearch` 自动决定，必须由当前业务明确：
 
-- 组件源码：`app/app-lib/src/business-comp/condition_search/`
-- 公开入口：`app/app-lib/src/business-comp/condition_search/index.ts`
-- 字段类型：`app/app-lib/src/business-comp/condition_search/types/fields.ts`
-- 表格接入：`app/app-lib/src/business-comp/table_container/src/TableContainer.vue`
-- 表格配置类型：`app/app-lib/src/business-comp/table_container/src/types/container.ts`
+- 实际检索字段和字段类型
+- 操作符及其可选值
+- 默认条件和不可清除条件
+- 时间范围限制
+- 权限控制和字段可见性
+- 查询参数转换及接口字段映射
+- 查询成功、失败、空结果时的页面更新
+- 与表格、分页、排序、左侧树及其它查询条件的联动关系
 
-优先参考以下真实页面：
-
-- 安全事件列表：`app/aes-incident/src/view/mod_sec_event/event_table/`
-- 告警列表：`app/aes-incident/src/view/mod_sec_alert/alert_list/`
-- 日志调查：`app/aes-incident/src/view/mod_log_analysis/`
-- 病毒列表：`app/aes-virus/src/view/virus_list/`
-
-列表页面优先通过 `AES__APP_LIB/TableContainer` 的 `search.conditionSearch` 接入，不重新拼装筛选区域。非表格场景才直接使用 `AES__APP_LIB/ConditionSearch`。
-
-参考代码前必须核对目标分支中的公开类型和实际调用，不得根据文档虚构字段类型、Props、Events 或实例方法。
+未命中 `componentId: ConditionSearch`、封装能力不足或业务行为超出封装范围时，继续按上述设计规则补充实现，不得假设已有完整封装。

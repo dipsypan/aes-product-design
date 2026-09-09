@@ -1,6 +1,8 @@
 # AES 资产适用检测 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 定位与调用条件
 
@@ -13,6 +15,13 @@
 - 对象固定全局生效、不存在资产范围差异时不调用。
 
 Theme 负责判断能力是否启用以及检测的业务实体；本 Feature 不重新判断业务范围。
+
+## Feature 身份与封装
+
+- `featureId: asset-applicability-check`
+- `encapsulation: true`
+- `componentId: CheckPolicyModal`
+- 封装负责检测弹窗和通用阶段交互；业务页面负责实体、结果字段和权限。
 
 ## 2. 入口
 
@@ -124,18 +133,15 @@ feature_contract:
 - 已区分资产无结果、无适用项、检索失败和检测失败。
 - 规则场景只替换业务实体与结果字段，没有重新设计检测流程。
 
-## 前端参考基准
+## 实现绑定
 
-实现资产适用性检测时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+- `componentId: CheckPolicyModal`
+- 来源：`AES__APP_LIB/PolicyCommon`
+- 列表入口直接复用检测弹窗封装，不重新实现资产检索、检测状态或“开始检测”流程。
+- 编码阶段必须核验目标分支的实际导出名、路径、Props、API 配置和结果字段。
 
-- 公共弹窗入口：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/index.ts`
-- 检测弹窗实现：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/src/index.vue`
-- 公共业务导出：`app/app-lib/src/business-comp/policy_common/index.ts`
-- 资产查询和检测结果请求类型：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/src/types.ts`
+## 业务补充
 
-优先参考以下真实页面：
-
-- 安全策略列表：`app/aes-policy/src/view/mod_policy/components/policy_table.vue`
-- 升级策略列表：`app/aes-agent/src/view/upgrade_manage/components/upgrade_strategy_table.vue`
-
-列表入口应复用 `AES__APP_LIB/PolicyCommon` 的 `CheckPolicyModal`，并由业务页面注入资产列表、策略/规则关联结果和详情跳转配置。不得在业务页面重新实现检测弹窗、资产检索状态或“开始检测”流程。参考代码前必须核对目标分支中的弹窗 Props、API 配置和结果字段，不得根据 Feature 线框图虚构接口或组件属性。
+- 业务页面负责注入资产列表、策略/规则关联结果、详情跳转配置和权限条件。
+- `entity_type`、结果字段、实际生效项标识及成功/失败状态仍由本 Feature 决定。
+- 封装不足或业务结果超出 `CheckPolicyModal` 能力时，仅补充缺口，不改变本 Feature 的检测流程。

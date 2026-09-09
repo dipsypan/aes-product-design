@@ -1,6 +1,8 @@
 # AES 分级二次确认 Pattern
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 调用契约
 
@@ -209,3 +211,10 @@ confirmation_contract:
 - 黑名单规则页的导出确认和客户端下载页配置的关闭确认使用气泡确认。
 - 其余确认场景使用弹窗确认。
 - 真实产品已有确认规则时，页面实现与该规则保持一致。
+
+## 实现绑定
+
+- `componentId: ConfirmModal`；策略删除等场景可配合 `PolicyCommon` 的业务删除弹窗封装。
+- 封装负责确认容器、输入框和通用交互；本 Pattern 继续负责风险等级、触发条件、确认文案、数量口径和成功/失败反馈。
+- 编码阶段必须核验目标分支的实际导出名、Props、Events 和调用方式。
+- 封装不足或业务行为超出确认组件能力时，按本 Pattern 的分级规则补充实现，不得降低确认等级。

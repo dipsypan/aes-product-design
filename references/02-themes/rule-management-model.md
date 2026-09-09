@@ -1,6 +1,7 @@
 # AES 规则管理 Theme Model
 
 > **归属：AES Product Design。** 本 Reference 处理 AES 平台上可管理的匹配规则。命中后不再读取 Common Theme。本模型明确指定的页面、Pattern、Feature、Component 和术语均为锁定方案；下游只执行、展开和验证，不得重新决策。未指定事项才进入对应层级判断。
+> `Coverage: override`
 
 ## 目录
 
@@ -128,7 +129,7 @@ page_inventory:
   list:
     required: true
     template: ../03-templates/list.md
-    template_id: page-table-basic
+    templateId: page-table-basic
     list_role: primary
     container: full-page
     interaction_mode: manage
@@ -274,6 +275,8 @@ filter_contract:
 
 - 操作顺序为新增、删除、启用、禁用；新增始终可用，依赖选中项的操作在无选中项时禁用；
 - 可配置生效资产时，追加始终可用的“资产适用规则检测”，并完整执行 `../05-features/asset-applicability-check.md`；固定全局时不显示；
+- 规则匹配采用命中即生效模型，不建立策略式优先级，不调用 `featureId: priority-adjustment`。
+- 可配置生效资产时，资产适用规则检测使用 `featureId: asset-applicability-check`，由业务页面按规则实体注入检测结果；固定全局生效时不显示检测入口。
 - 导入和导出只根据 PRD 信号形成是否需要的 Theme 提案，不绑定单主体或行为组合；只有用户确认启用后，才分别读取并执行 `../05-features/import.md` 或 `../05-features/export.md`；
 - 删除、启用、禁用确认目标和数量；全部成功、部分失败和全部失败反馈按 Table Management Pattern 执行；
 - 不在本 Theme 重写勾选、导入、导出或资产检测的完整流程。
@@ -299,7 +302,7 @@ list_field_proposal:
 | ---: | --- | --- | --- | --- | --- |
 | 1 | 规则 ID | `conditional` | 规则 ID | 否 | 仅命名规则（通常为行为组合）展示；单主体不作为用户配置或展示字段 |
 | 2 | 规则核心内容 | `theme-required` | 由用户定义 | 否 | 单主体显示主体值；行为组合显示可读摘要并支持复制完整表达式 |
-| 3 | 启用状态 | `theme-required` | 启用状态 | 否 | 状态操作需确认；保持同模块现有位置 |
+| 3 | 启用状态 | `theme-required` | 启用状态 | 否 | 执行 `enable-disable.md`；单条即时修改需确认，保持同模块现有位置 |
 | 4 | 创建时间 | `theme-required` | 创建时间 | 是 | 默认 `created_at DESC` |
 | 5 | 最近修改时间 | `theme-required` | 最近修改时间 | 是 | 显示完整时间 |
 | 6 | 操作列 | `theme-required` | 操作 | 否 | 建议包含编辑、删除并冻结在列尾 |
@@ -367,7 +370,7 @@ list_field_proposal:
 
 | 建议顺序 | 表单字段 | 级别 | 新增 | 编辑 | 规则 |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | 启用状态 | `theme-required` | 默认启用 | 显示当前值 | 建议为首项 |
+| 1 | 启用状态 | `theme-required` | 默认启用 | 显示当前值 | 执行 `enable-disable.md` 的 `form-submit-choice` 方案，建议为首项 |
 | 2 | 规则名称 | `conditional` | 仅行为组合 | 仅行为组合 | 与规则描述组成命名规则方案；单主体不生成 |
 | 3 | 规则描述 | `conditional` | 仅行为组合 | 仅行为组合 | 与规则名称组成命名规则方案；单主体不生成 |
 | 4 | 过期时间 | `conditional` | 按过期模式 | 按过期模式 | 规则信息分组；固定永久时不生成 |
@@ -508,6 +511,7 @@ form_contracts:
 ### 6.2 详情内容契约
 
 - 详情只读展示用户已确认且适用于详情的字段，不新增字段。
+- 详情包含启用状态时，执行 `../04-patterns/enable-disable.md` 的 `readonly-status` 方案；只展示当前业务真值，不提供即时修改入口。
 - 字段名称和值语义与列表和表单一致；规则核心内容继续使用用户确认名称。
 - 单主体展示完整主体类型和主体值；行为组合展示完整条件表达式及组间关系。
 - `asset_scope=configurable` 时展示分配资产、排除资产和生效资产，名称与其他页面一致；查看完整资产执行 `asset-scope.md` 的抽屉能力。
@@ -526,6 +530,15 @@ prescribed_downstream_contracts:
   patterns:
     - { contract_id: filtering, locked: true, enabled_when: filter_contract.final.decision_locked=true, values: filter_contract.final }
     - { contract_id: table-management, locked: true, values: { table_task: manage, column_contract: list_field_contract.final_columns } }
+    - contract_id: enable-disable
+      locked: true
+      values:
+        scenarios: { list: single-immediate-change, create: form-submit-choice, edit: form-submit-choice, detail: readonly-status, batch: batch-change }
+        state_contract:
+          default_value: { create: enabled }
+          current_value_source: { list: server-truth, edit: server-truth, detail: server-truth }
+          editable: { list: true, create: true, edit: true, detail: false, batch: true }
+          immutable_rules: []
     - { contract_id: form-management, locked: true, values: { fields_source: create_form_contract.final_fields | edit_form_contract.final_fields } }
     - { contract_id: page-notice, locked: true, values: { visible: true, content_source: rule_decision.notice } }
     - { contract_id: condition-expression-editor, locked: true, enabled_when: rule_decision.match_mode.value=condition-combination, values: condition_expression_contract }
@@ -606,6 +619,7 @@ aes_stage_result:
         enabled: true | false
         enabled_when: rule_decision.detail.user_requested=true
         fields: []
+        enable_status_mode: readonly-status
       confirmation_items: []
   downstream_requirements:
     next_stage: template
@@ -615,6 +629,7 @@ aes_stage_result:
       - { reference: ../03-templates/detail.md, enabled_when: rule_decision.detail.user_requested=true }
       - { reference: ../04-patterns/filtering.md, enabled_when: always }
       - { reference: ../04-patterns/table-management.md, enabled_when: always }
+      - { reference: ../04-patterns/enable-disable.md, enabled_when: enable-status-is-present }
       - { reference: ../04-patterns/form-management.md, enabled_when: always }
       - { reference: ../04-patterns/page-notice.md, enabled_when: always }
       - { reference: ../04-patterns/condition-expression-editor.md, enabled_when: rule_decision.match_mode.value=condition-combination }
@@ -646,4 +661,5 @@ aes_stage_result:
 - 存在 `user_decision=pending`、未确认的 `rule_decision` 或其他阻断页面生成的事实时，`status=needs_confirmation`，并同步写入 `confirmation_items`、`design_questions` 和 `blocking_questions`。
 - 所有必要事实已确认且不存在冲突时，`status=resolved`；不得因为已给出 Theme 提案就提前标记为已解决。
 - `list_contract`、`create_form_contract`、`edit_form_contract` 分别输出，不得互相代替；详情未由用户指定时，`detail_contract.enabled=false` 且不输出虚构字段。
+- 启用状态的默认值、当前值来源、可编辑性和各页面场景均由 Theme 锁定；`enable-disable` 只执行对应交互语义，不反推业务事实。
 - `required_references` 和 `prescribed_downstream_contracts` 必须按实际条件展开，不得返回空占位。

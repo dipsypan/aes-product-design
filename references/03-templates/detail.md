@@ -1,96 +1,65 @@
 # AES 详情页 Template
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Template，不作为 Common Design 的通用模板。本文明确规定的 AES 页面规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Template，不作为 Common Design 的通用模板。
+> `Coverage: override`
 
 ## 目录
 
-- 使用方式与输出契约
+- 使用方式
 - 容器选型：抽屉详情与下钻详情
 - 通用页面结构
 - 顶部标题区与对象概要区
 - 正文组织：分区与 Tab
 - 抽屉详情参考基准
 - 下钻详情参考基准
+- 页面类型、templateId 与封装状态
+- 实现绑定
+- 视觉与业务证据
 - 状态、异常与边界
 - 示例
 
-## 1. 使用方式与输出契约
+## 1. 使用方式
 
 本 Reference 用于 AES PC 端对象详情的页面选型、信息组织和交互设计。Theme 或用户已锁定详情容器、正文组织或连续浏览能力时直接执行，不得重新选型；只有未锁定事项才按本文判断。病毒、日志、任务、事件、客户端等业务名称不是新的页面类型。
 
-设计详情页时必须返回：
-
-```yaml
-detail_type: drawer-detail | drilldown-detail
-content_organization: sections | tabs
-sequence_navigation: enabled | disabled | not-applicable
-drawer_width: 640 | 960 | user-specified
-header_contract:
-  drawer_title: 业务对象类型 + 详情 | not-applicable
-  object_title: 当前对象实例的主标识
-  summary_presentation: plain | emphasized
-  presentation_reason: standard-summary | identity-context | relationship-context
-  summary_fields: []
-  exposed_actions: []
-  more_actions: []
-  noticeRegion: page-notice | none
-  selection_reason: 说明容器、正文组织和概要表现的判断依据
-body_modules:
-  - module_id: ""
-    content_type: descriptions | table | timeline | chart | raw-data | other
-    pattern_requirements: []
-reference_page: 真实参考页面
-```
-
-- `detail_type` 只有抽屉详情和下钻详情两类；`content_organization`、`sequence_navigation` 是结构能力，不得包装为新的页面类型。
-- 抽屉必须返回 `drawer_width`；下钻页返回 `not-applicable`。
+- 先分别确定 `detail_container`、`entry_mode` 和 `content_organization`；前端已有编号不得反向限制详情结构。
+- 病毒、日志、任务、事件、客户端等业务名称不是容器或入口类型。
 - 用户已明确容器、宽度或交互时，以用户要求为准；若与硬边界冲突，必须指出冲突和影响。
 - Theme 已锁定容器或交互时，以锁定契约为准；若与硬边界冲突，返回 Theme，不得在本 Template 自行切换。
 
-### 1.1 与 Common Design 的类型映射
-
-本 Reference 对 AES 详情页的容器、概要区、正文组织、连续浏览和关闭方式采用 `override`。Common Design 中对应的页面类型只作为概念映射，不得覆盖本文件的 AES 规则：
-
-| Common Design 页面类型 | AES 详情类型 | 说明 |
-| --- | --- | --- |
-| `page-detail-drawer` | `drawer-detail` | 抽屉是容器类型，不因病毒、日志、任务等对象名称拆出新页面类型 |
-| `page-detail-drilldown` | `drilldown-detail` | 下钻是独立路由的详情容器 |
-| `page-detail-log` | `drawer-detail` 或 `drilldown-detail` | 日志是业务对象/内容视图，按任务复杂度和路由需求选择容器，不作为 AES 独立页面类型 |
-
-以下 AES 规则优先于 Common Design 的默认详情规则：概要区默认采用 `plain`，不强制使用 `IxCard`；只读抽屉默认通过右上角关闭，不生成空白 Footer；连续浏览是可复用的详情能力，不限定为日志页面。
-
-Common Design 仍可补充本 Reference 未定义的通用组件 API、导航适配和基础可访问性要求；补充内容不得改变上述容器、页面类型映射和 AES 详情结构。
+执行顺序固定为：先确定页面类型、详情容器、入口关系、正文组织和详情变体；再核对该类型的前端封装状态；随后按封装状态使用前端封装或视觉与业务参照；最后填写 `templateId` 和 `encapsulation`。视觉参照不得替代前端封装核验。
 
 ## 2. 容器选型
 
-### 2.1 两类详情
+### 2.1 容器与入口关系
 
-| 类型 | 核心定位 | 适用条件 | 典型参考 |
+| `detail_container` | `entry_mode` | 核心定位 | 典型参考 |
 | --- | --- | --- | --- |
-| `drawer-detail` | 保留父页上下文，快速查看或轻量处理 | 信息量中等、任务短、详情链路不深、需要连续查看列表记录 | 病毒详情、日志详情、任务详情抽屉 |
-| `drilldown-detail` | 进入独立空间完成深度理解或处理 | 信息多、任务复杂、需要独立路由或多模块协作 | 安全事件详情、告警链详情、任务中心任务详情、客户端详情 |
+| `drawer` | `contextual` | 保留父页上下文，快速查看或轻量处理 | 病毒详情、日志详情、任务详情抽屉 |
+| `page` | `drilldown` | 从来源页面进入独立空间完成深度理解或处理 | 安全事件详情、任务中心下钻详情、客户端详情 |
+| `page` | `stable` | 具有稳定入口、可直接访问的独立详情任务 | 按当前业务确定 |
+| `modal` | `contextual` | 当前流程中短时查看少量只读信息 | 按当前业务确定 |
+| `other` | 按业务确定 | 以上容器无法表达、且有明确业务依据的详情结构 | 按完整 Template 契约定义 |
 
 ### 2.2 按顺序判断
 
-1. 详情链路达到 3 级，使用下钻详情。
-2. 包含复杂长表单、多步骤配置、富文本编辑、需要宽画布协同操作的图表与明细表组合，或单模块超过 3 屏且无法拆分，使用下钻详情。
-3. 需要独立 URL、浏览器前进后退、新标签页打开、分享定位或刷新恢复，使用下钻详情。
-4. 需要频繁对照父列表、连续查看多条记录、快速标记或轻量处置，使用抽屉详情。
-5. 低频深度处理、高风险编辑或不可逆任务，使用下钻详情；高频低风险查看和短操作，使用抽屉详情。
-6. 仍无法确定时，判断用户任务能否在抽屉内独立完成：能够保留父页上下文并完成快速查看或轻量处理时选抽屉；需要离开父页进行沉浸式处理时选下钻。
+1. 菜单、页头 Tab 或其他稳定入口直接承载详情任务时，使用 `page + stable`。
+2. 需要独立 URL、浏览器前进后退、新标签页打开、分享定位、刷新恢复或深度处理时，使用 `page + drilldown`。
+3. 需要频繁对照父列表、连续查看多条记录、快速标记或轻量处置时，使用 `drawer + contextual`。
+4. 只需在当前流程中短时查看少量只读信息，并且关闭后立即返回原流程时，可以使用 `modal + contextual`。
+5. 以上结构均无法保留已确认的主要任务和区域关系时，使用 `other` 并完整说明容器、入口和退出方式。
 
 - Tab 数量不是容器选型条件。抽屉可以包含 2 个以上 Tab；根据内容复杂度、任务深度、父页上下文依赖和路由需求选择容器。
 
 ### 2.3 能力边界
 
-| 判断项 | 抽屉详情 | 下钻详情 |
-| --- | --- | --- |
-| 父页上下文 | 保留 | 离开父页，但返回时恢复父页状态 |
-| 详情层级 | 一级详情为主，最多扩展 1 层轻量子抽屉 | 支持更深的信息链路 |
-| 正文组织 | 分区或多个 Tab | 分区或多个 Tab |
-| 操作复杂度 | 查看和少量轻操作 | 深度分析、复杂配置、高风险操作 |
-| 路由能力 | 通常不提供独立 URL | 必须使用独立路由 |
-| 退出方式 | 右上角关闭；连续浏览可有底部关闭 | 返回上级，不使用“关闭页面” |
+| 判断项 | `drawer + contextual` | `page + drilldown/stable` | `modal + contextual` |
+| --- | --- | --- | --- |
+| 上下文 | 保留父页 | 独立页面；有来源时返回后恢复来源状态 | 保留当前流程 |
+| 正文组织 | 分区或多个 Tab | 分区或多个 Tab | 少量连续只读内容 |
+| 操作复杂度 | 查看和少量轻操作 | 深度分析、复杂配置或高风险操作 | 查看或单一轻操作 |
+| 路由能力 | 通常不提供独立 URL | 使用独立路由 | 不提供独立 URL |
+| 退出方式 | 右上角关闭；连续浏览可有底部关闭 | Stable 按导航退出；Drilldown 返回来源 | 右上角关闭或单一关闭操作 |
 
 - 禁止连续嵌套超过 2 层抽屉。
 - 二级内容复杂或属于独立任务时，从一级抽屉跳转下钻页。
@@ -233,10 +202,9 @@ Common Design 仍可补充本 Reference 未定义的通用组件 API、导航适
 - `content_type=table` 时，将 `table-management` 写入该模块的 `pattern_requirements`，并传递 `host_template=detail`、`table_role=embedded`、抽屉宽度或正文可用宽度；不得先调用 List Template，也不得由 Table Pattern 重新决定详情容器、分区或 Tab。
 - 分区内容不得套装饰性卡片；背景、边框和阴影不能代替标题与间距。
 
-### 5.3 第二步：执行 Tab 布局
+### 5.3 第三步：执行 Tab 布局
 
-- 统一使用 `@idux-vue2/components` 的 `IxTabs`，设置 `type="line"`、`placement="top"`；不得使用卡片型或分段型 Tab 作为详情正文导航。
-- 使用 `dataSource` 定义稳定且唯一的 `key` 和明确的 `title`，通过 `:selectedKey.sync` 管理选中项，通过 `#content="{ key }"` 渲染内容；不得使用不存在的 `IxTabPanel`。
+- Tab 采用顶部线型导航并使用稳定、唯一的标识；具体组件、属性、事件和插槽由 Component 层或编码阶段核验。
 - Tab 名称直接表达内容或任务，例如“结构化详情 / 原始日志”“任务信息 / 执行记录”；少量字段不能独立成为 Tab。
 - 抽屉允许使用 2 个以上一级 Tab。Tab 溢出时保留 `showAllTabsPanel` 能力，通过组件的全部标签入口访问，不压缩文字、换行或缩小字号。
 - Tab 内允许按 5.2 使用少量平铺分区，但不得继续嵌套主要 Tab。
@@ -368,35 +336,118 @@ Common Design 仍可补充本 Reference 未定义的通用组件 API、导航适
 | 分区 | 信息多但属于一个连续处理任务 | 按任务中心详情的连续模块逻辑组织 |
 | Tab | 多个独立分析或管理任务 | 安全事件详情、客户端详情 |
 
-## 8. 状态、异常与边界
+## 8. 页面类型、templateId 与封装状态
 
-### 8.1 加载与失败
+完成容器、入口关系、正文组织、详情变体和视觉业务参照核对后再执行本节。`templateId` 和 `encapsulation` 是页面设计结果的模板契约，不参与前面的页面结构选型；即使本节在文档中位于视觉证据之前，也不得跳过前端封装状态核验。
+
+| 页面类型 | 已确认结构 | `templateId` | `encapsulation` | 执行方式 |
+| --- | --- | --- | --- | --- |
+| 抽屉详情页 | Drawer + Contextual | `page-detail-drawer` | `true` | 优先复用抽屉详情骨架，未覆盖部分继续补充 |
+| 下钻详情页 | Page + Drilldown | `page-detail-drilldown` | `false` | 按本 Template 契约实现 |
+| 自定义页面类型 | 没有既有 AES Template 可承载的详情结构 | `custom` | `false` | 按完整 Template 契约实现 |
+
+设计详情页时必须返回：
+
+```yaml
+template_contract:
+  templateId: page-detail-drawer | page-detail-drilldown | custom
+  encapsulation: true | false
+  customReason: ""
+  detail_container: page | drawer | modal | other
+  entry_mode: stable | drilldown | contextual
+  content_organization: sections | tabs
+  sequence_navigation: enabled | disabled | not-applicable
+  drawer_width: 640 | 960 | user-specified
+  header_contract:
+    drawer_title: 业务对象类型 + 详情 | not-applicable
+    object_title: 当前对象实例的主标识
+    summary_presentation: plain | emphasized
+    presentation_reason: standard-summary | identity-context | relationship-context
+    summary_fields: []
+    exposed_actions: []
+    more_actions: []
+    noticeRegion: page-notice | none
+    selection_reason: 说明容器、正文组织和概要表现的判断依据
+  body_modules:
+    - module_id: ""
+      content_type: descriptions | table | timeline | chart | raw-data | other
+      pattern_requirements: []
+  reference_page: 真实参考页面
+```
+
+- `content_organization`、`sequence_navigation` 是结构能力，不得包装为新的页面类型。
+- Drawer 必须返回 `drawer_width`；其他容器返回 `not-applicable`。
+- 无论是否封装都沿用该页面模板的稳定编号；`encapsulation: true` 时，`templateId` 必须与前端页面封装编号一致；`encapsulation: false` 时按完整契约自行实现。
+- 没有既有 AES Template 可承载时填写 `templateId: custom`、`encapsulation: false` 和 `customReason`。
+- `encapsulation: false` 不阻断设计或开发，也不得为了获得前端封装改变已确认的详情结构。
+- 本 Reference 对 AES 详情页的容器、概要区、正文组织、连续浏览和关闭方式采用 `override`。通用组件 API、导航适配和基础可访问性要求不得改变上述 AES 详情结构。
+
+## 9. 实现绑定
+
+- `encapsulation: true` 时在编码阶段核验目标分支中模板的真实入口和参数，封装未覆盖的详情能力按本 Template 契约补充实现。
+- `encapsulation: false` 时不得声称复用了页面模板，按本 Template 契约和项目组件实现。
+
+## 10. 视觉与业务证据
+
+本节用于页面还原和视觉校验，不改变前面的页面类型、容器、入口、正文组织和详情变体判断。
+
+- `encapsulation: true` 时，先核验并优先使用前端页面封装；本节只用于校验封装效果、补充封装未覆盖内容和还原 AES 业务差异。
+- `encapsulation: false` 时，前端没有可直接调用的页面封装，本节作为页面结构和视觉还原参考，结合当前 Template 契约自行实现。
+- 参考页面不自动成为当前详情的字段、操作、状态、权限或正文模块；这些内容仍由当前需求和上游设计契约决定。
+
+以下路径均相对于前端工程 `/Users/sangfor/Documents/aes-mgr-front0830`。
+
+### 抽屉详情
+
+| 详情结构 | 参考页面 | 关键源码 |
+| --- | --- | --- |
+| 连续浏览抽屉 | 病毒详情 | `app/aes-virus/src/view/virus_list/components/virus_table.vue` |
+| 病毒详情正文 | 病毒信息、资产信息、检测与处置记录 | `app/aes-virus/src/view/virus_detail/index.vue` |
+| 单记录抽屉 | 任务详情 | `app/aes-task/src/view/components/drawer_task_detail.vue` |
+| 行为详情抽屉 | 安全事件行为详情 | `app/aes-incident/src/view/mod_sec_event/components/behavior_detail_drawer/index.vue` |
+
+病毒详情应同时核对列表中的抽屉容器和详情正文：前者负责宽度、连续浏览及关闭方式，后者负责概要与正文模块。
+
+### 下钻详情
+
+| 详情结构 | 参考页面 | 关键源码 |
+| --- | --- | --- |
+| 安全事件详情 | 事件分析下钻页 | `app/aes-incident/src/view/mod_sec_event/event_detail/index.vue` |
+| 任务详情 | 任务中心下钻页 | `app/aes-task/src/view/task_detail/index.vue` |
+| 客户端详情 | 终端详情下钻页 | `app/aes-agent/src/view/agent_detail/index.vue` |
+
+参考实现时只复用与目标详情类型匹配的容器、概要区、正文组织和导航关系。现有页面中的业务字段、历史视觉样式和特定操作不能自动成为新详情页规则。
+
+## 11. 状态、异常与边界
+
+### 11.1 加载与失败
 
 - 首次加载使用与页面结构匹配的骨架或加载态，避免空白容器。
 - 概要与正文可以分开加载；概要失败时不得显示错误对象标题，正文局部失败只替换对应分区或 Tab。
 - 整体失败显示重试入口，并保留退出或返回能力。
 - 操作成功后刷新受影响区域并同步父列表；失败时保留当前内容和用户位置。
 
-### 8.2 空值与长内容
+### 11.2 空值与长内容
 
 - 普通空字段显示 `-`；整个模块没有数据时显示模块级空状态，不罗列整屏 `-`。
 - 长标题、路径、哈希、ID 和描述必须提供省略、换行、复制或 Tooltip 中合适的一种完整查看方式。
 - 原始 JSON、日志和代码类内容使用等宽字体，支持复制；数据量大时使用虚拟滚动或按需加载。
 - 字段和值不得与操作区重叠，不得因国际化长文案改变固定操作位置。
 
-### 8.3 权限与操作
+### 11.3 权限与操作
 
 - 无查看权限时不进入详情；局部无权限时在对应模块展示明确状态。
 - 无操作权限的动作按平台规则隐藏或禁用；禁用时必须说明原因。
 - 高风险操作必须二次确认，成功与失败均给出明确反馈。
 - 编辑存在未保存内容时，关闭抽屉、返回、切换 Tab 或跳转前均按影响范围提供离开确认。
 
-## 9. 完整示例
+## 12. 完整示例
 
-### 9.1 病毒列表进入病毒详情
+### 12.1 病毒列表进入病毒详情
 
 ```yaml
-detail_type: drawer-detail
+detail_container: drawer
+entry_mode: contextual
 content_organization: sections
 sequence_navigation: enabled
 drawer_width: 960
@@ -428,10 +479,11 @@ reference_page: 病毒列表 - 病毒详情
                                      └────────────────────────────────────┘
 ```
 
-### 9.2 日志调查进入日志详情
+### 12.2 日志调查进入日志详情
 
 ```yaml
-detail_type: drawer-detail
+detail_container: drawer
+entry_mode: contextual
 content_organization: tabs
 sequence_navigation: enabled
 drawer_width: 960
@@ -464,10 +516,11 @@ reference_page: 日志调查 - 日志详情
 └──────────────────────────────────────────────┘
 ```
 
-### 9.3 单条任务详情抽屉
+### 12.3 单条任务详情抽屉
 
 ```yaml
-detail_type: drawer-detail
+detail_container: drawer
+entry_mode: contextual
 content_organization: sections
 sequence_navigation: disabled
 drawer_width: 640
@@ -483,10 +536,11 @@ selection_reason: 仅查看单条任务信息，无连续浏览和复杂处理�
 reference_page: 任务中心 - 任务详情抽屉
 ```
 
-### 9.4 安全事件下钻详情
+### 12.4 安全事件下钻详情
 
 ```yaml
-detail_type: drilldown-detail
+detail_container: page
+entry_mode: drilldown
 content_organization: tabs
 sequence_navigation: not-applicable
 drawer_width: not-applicable

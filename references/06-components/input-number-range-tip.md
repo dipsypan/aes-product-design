@@ -1,14 +1,27 @@
 # AES 数字输入范围提示组件
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属组件映射，不作为 Common Design 的通用组件规范。本组件能力整体采用 AES `override`；本文定义的规则直接以 AES 为准，未登记的其他组件能力才由 `prd-design-code` 调用 Common Design 或依据项目已有代码处理。
 
 本 Reference 只补充 AES 对 IDUX `InputNumber` 的差异，不重复定义组件本身的 API、数值输入、步进和校验能力。
 
-## 使用范围
+## 使用条件
 
 - 仅当 InputNumber 存在明确的可输入范围，且用户需要在输入时知道该范围，才增加范围 Tooltip。
 - Tooltip 文案必须与组件实际的 `min`、`max` 保持一致。
 - 没有明确范围或范围已经由相邻文案完整表达时，不额外增加 Tooltip。
+
+## 不适用与禁止事项
+
+- 没有明确 `min`、`max` 范围时，不生成范围提示。
+- 不得把范围提示组件组合当作新的独立业务组件或公共 API。
+
+## Component 身份
+
+- `componentId: IxTooltip + IxInputNumber`
+- `encapsulation: true`
+- 组件能力：数字输入范围提示组合
+- 来源：IDUX 组件组合，配合 ProForm 校验状态使用。
 
 ## Tooltip 规则
 
@@ -32,7 +45,7 @@
 - Tooltip 不应改变输入框、单位或相邻文案的行高和对齐。
 - 输入框与前后文案组成同一逻辑行时，沿用表单规范的行内布局规则。
 
-## AES 参考示例
+## 参考场景
 
 页面路径：`任务中心 / 任务计划 / 新增 / 快速扫描 / 执行计划`
 
@@ -59,15 +72,13 @@
 - `invalid` 状态下错误提示优先，范围 Tooltip 不叠加。
 - 固定单位、输入框和相邻文案保持同一逻辑行，Tooltip 不改变布局。
 
-## 前端参考基准
+## 复用契约
 
-数字输入范围提示当前以 `IxTooltip`、`IxInputNumber` 与 ProForm 校验状态组合实现。实现时以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+- 该编号代表稳定的组合基准，不代表新增的独立业务组件或公共 API。
+- 编码前必须核对目标分支中 `min`、`max`、单位、校验器和错误状态；不得将页面局部实现当作额外封装。
 
-- 任务中心病毒任务执行计划：`app/aes-task/src/view/task_create/components/virus_task/components/execution_plan_modal.vue`
-- 任务中心病毒任务高级设置：`app/aes-task/src/view/task_create/components/virus_task/advanced_settings.vue`
-- 终端列表病毒查杀执行计划：`app/aes-agent/src/view/agent_list/components/virus_scan_modal/components/execution_plan_modal.vue`
-- 终端列表病毒查杀高级设置：`app/aes-agent/src/view/agent_list/components/virus_scan_modal/advanced_settings.vue`
+## 业务补充
 
-优先参考“扫描时长限制”和“错过开始时间的补扫时长”的实现：使用 `IxTooltip placement="bottomStart" trigger="click"` 包裹 `IxInputNumber`，并在 ProForm 控件状态为 `invalid` 时不提供范围提示内容，由表单校验提示接管。
-
-本 Component Reference 规定数字范围提示的 AES 组件组合基准，但不将上述页面内的局部实现虚构为独立公共组件或稳定 API。编码前必须核对目标分支中 `IxInputNumber` 的实际 `min`、`max`、单位、校验器和错误状态，提示文案必须与这些约束一致。
+- 当前业务负责定义实际范围、单位、字段文案、权限和校验触发时机。
+- Tooltip 文案必须根据真实 `min`、`max` 生成；`invalid` 状态下由校验错误接管。
+- 若目标页面没有明确范围，或组合能力不足以满足业务，按现有表单规则补充实现，不假设存在完整封装。

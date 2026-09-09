@@ -6,13 +6,37 @@ Template 在 Theme 已确认业务对象、页面范围和业务不变量后读�
 
 当本索引存在与需求页面类型对应的 AES Template 时，先执行 AES Template 的页面级结论；Common Design 仅补充该 Template 未覆盖的通用事项。不得先采用 Common Design 的页面骨架，再把 AES 内容作为局部修补。
 
-每个具体 Template Reference 的关系根据正文实际覆盖范围判定为 `extend` 或 `override`。正文未明确的局部事项不得按索引或文件名推断关系；应记录待确认，并只读取明确允许补充的 Common Design 事项。
+每个具体 Template Reference 必须显式声明 `Coverage: inherit | extend | override`。不得根据正文、索引或文件名自行推断 Coverage；未声明时记录 Coverage 缺失。
 
 | Template | 决策范围 | 命中时读取 |
 | --- | --- | --- |
 | `list` | 列表类型、概览区/左树/列表主区和主容器 | [`list.md`](list.md) |
 | `form` | 表单容器、入口关系、单面/递进/步骤条结构、主要分区和操作区 | [`form.md`](form.md) |
 | `detail` | 抽屉/下钻详情、概要区、正文组织和操作区 | [`detail.md`](detail.md) |
+
+## AES 页面类型与模板编号
+
+下表按阅读顺序登记页面类型、使用条件、模板编号和前端封装状态。先根据页面类型和使用条件完成页面设计，再填写 `templateId` 与 `encapsulation`；编号不参与结构选型，也不限制 AES 可设计的页面结构：
+
+| 页面类型 | 使用条件 / 页面结构 | `templateId` | `encapsulation` | 设计 Reference |
+| --- | --- | --- | --- | --- |
+| 基础表格页 | 表格主区；不需要概览或稳定层级 | `page-table-basic` | `true` | [`list.md`](list.md) |
+| 左树表格页 | 左树 + 表格主区；需要稳定层级切换 | `page-table-tree` | `true` | [`list.md`](list.md) |
+| 概览表格页 | 概览区 + 表格主区；需要持续展示业务汇总 | `page-table-overview` | `true` | [`list.md`](list.md) |
+| 概览左树表格页 | 概览区 + 左树 + 表格主区 | `page-table-overview-tree` | `true` | [`list.md`](list.md) |
+| 弹窗列表页 | Modal 内临时查询或选择 | `page-list-modal` | `true` | [`list.md`](list.md) |
+| 抽屉列表页 | Drawer 内保留父页上下文浏览或操作 | `page-list-drawer` | `true` | [`list.md`](list.md) |
+| 页面级表单页 | Page + Stable/Drilldown + 单面或递进式结构 | `page-form-config` | `false` | [`form.md`](form.md) |
+| 下钻步骤条配置页 | Page + Stable/Drilldown + Stepper；同一连续任务的多步骤配置 | `page-form-stepper` | `true` | [`form.md`](form.md) |
+| 弹窗表单页 | Modal + 表单流程 | `page-form-modal` | `true` | [`form.md`](form.md) |
+| 抽屉表单页 | Drawer + 表单流程；保留父页上下文 | `page-form-drawer` | `true` | [`form.md`](form.md) |
+| 抽屉详情页 | Drawer + Contextual；快速查看或轻量处理 | `page-detail-drawer` | `true` | [`detail.md`](detail.md) |
+| 下钻详情页 | Page + Drilldown；独立路由的深度详情 | `page-detail-drilldown` | `false` | [`detail.md`](detail.md) |
+
+- `templateId` 只标识页面模板；筛选、导入、状态、确认等能力继续由 Pattern / Feature 决定。
+- `encapsulation: true` 时，表中 `templateId` 同时作为前端页面封装调用编号。
+- `encapsulation: false` 时，表中 `templateId` 仍须输出，但编码按完整 Template 契约自行实现；不因没有封装而改名。
+- 没有既有 AES Template 可承载时返回 `templateId: custom`，并按完整 Template 契约实现；不得为了命中已有编号删减或改变页面结构。
 
 ## 调用门禁
 
@@ -25,6 +49,9 @@ Template 在 Theme 已确认业务对象、页面范围和业务不变量后读�
 ```yaml
 template_contract:
   page_id: ""
+  templateId: ""
+  encapsulation: true | false
+  customReason: ""
   template_type: list | form | detail
   page_container: ""
   page_regions: []

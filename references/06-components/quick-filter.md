@@ -1,8 +1,31 @@
 # AES 快速筛选组件
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属组件映射，不作为 Common Design 的通用组件规范。本组件能力整体采用 AES `override`，本文定义的规则直接以 AES 为准，未登记的其他组件能力才由 `prd-design-code` 调用 Common Design 或依据项目已有代码处理。页面应在高级筛选、快速筛选和简单平铺筛选之间如何选择，由 `../04-patterns/filtering.md` 定义。
 
-## 快速筛选
+## 使用条件
+
+- 仅当业务需要高频结构化筛选，并且需要与关键词搜索组合时使用。
+- 是否选择快速筛选由 [`../04-patterns/filtering.md`](../04-patterns/filtering.md) 决定。
+
+## 不适用与禁止事项
+
+- 已选择高级筛选或简单平铺筛选时，不重复生成快速筛选。
+- 不得把组件内部 Button、Popover、Panel 或未稳定类型当作公共 API。
+
+## Component 身份
+
+- `componentId: QuickFilterLayer / QuickSearchFilter`
+- `encapsulation: true`
+- 组件能力：快速筛选区域
+
+## 复用契约
+
+- 典型接入方式：表格容器的 `search.quickSearchFilter`。
+- 列表页面优先直接复用表格容器封装；非表格场景按目标分支的稳定入口接入。
+- 编码阶段必须核验实际导出名、路径、Props、Events 和调用方式。
+
+## 设计规则
 
 - 用于承载高频结构化筛选条件，并与检索框组合使用。
 - 页面必须同时包含快速筛选项和搜索框，两者可组合生效。
@@ -20,24 +43,8 @@
 [快速筛选]    [请输入名称或 ID]    [批量搜索（可选）]
 ```
 
-## 前端参考基准
+## 业务补充
 
-实现快速筛选时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
-
-- 组件源码：`app/app-lib/src/business-comp/quick_filter_layer/`
-- 公开入口：`app/app-lib/src/business-comp/quick_filter_layer/index.ts`
-- 主组件：`app/app-lib/src/business-comp/quick_filter_layer/src/QuickFilterSelector.vue`
-- 表格组合实现：`app/app-lib/src/business-comp/table_container/src/components/QuickSearchFilter.vue`
-- 查询状态处理：`app/app-lib/src/business-comp/table_container/src/composables/useQuickSearchPanel.ts`
-- 条件回显：`app/app-lib/src/business-comp/selected_condition_group/`
-
-优先参考以下真实页面：
-
-- 策略列表：`app/aes-policy/src/view/mod_policy/components/policy_table.vue`
-- 白名单列表：`app/aes-policy/src/view/mod_whitelist_management/`
-- 任务列表：`app/aes-task/src/view/task_list/`
-- 定时任务列表：`app/aes-task/src/view/scheduled_tasks/`
-
-列表页面优先通过 `AES__APP_LIB/TableContainer` 的 `search.quickSearchFilter` 接入，由表格容器组合快速筛选、关键词搜索、批量搜索和条件回显。非表格场景才直接使用 `AES__APP_LIB/QuickFilterLayer`。
-
-快速筛选仍在封装中。AI 编码时必须核对目标分支中的 `QuickFilterSelector.vue` 和实际业务调用，不得将内部 Button、Popover、Panel 或尚未稳定的类型声明当作正式公共 API。
+- 当前业务负责定义快速筛选字段、关键词字段、默认值、批量搜索字段和分隔规则。
+- 筛选确认、重置、回显、分页、排序和列表刷新遵循本 Reference 的设计规则。
+- 未命中 `componentId`、封装仍不稳定或业务行为超出封装范围时，按本 Reference 补充实现，不得假设已有完整封装。

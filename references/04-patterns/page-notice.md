@@ -1,5 +1,6 @@
 # AES 页面提示条 Pattern
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES 可复用的页面级提示条方案，不作为跨产线通用组件规范。页面是否预留提示区域由 Template 决定；Theme 或用户已锁定提示条时，本 Pattern 只负责执行内容结构和交互，不得重新判断是否展示；上游未指定时才由本 Pattern 判断。
 
 ## 使用边界
@@ -7,7 +8,6 @@
 - 页面存在业务效果、影响范围、容量限制、授权状态或其他需要持续提醒用户的信息时，读取本 Pattern。
 - 本 Pattern 可用于列表、详情、策略、任务和规则等页面，不限定于表格页面。
 - Template 只负责提供 `noticeRegion` 位置。Theme 或用户可以锁定是否生成及业务内容；本 Pattern 对锁定内容只做呈现补全。上游未指定时，本 Pattern 才判断是否生成及内容结构。
-- 具体 Alert / Banner 组件由 Component 层按项目既有能力承载。
 
 ## 展示规则
 
@@ -36,6 +36,7 @@ notice_contract:
     type: link | button | none
   dismissible: false
   related_scope: page | module | table | operation
+  required_components: [IxAlert]
   reference_evidence: []
 ```
 

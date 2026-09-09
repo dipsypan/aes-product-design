@@ -1,6 +1,7 @@
 # AES 列表页模板
 
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属列表模板差异规范，不作为跨产线通用规范。标准页面名称和 `templateId` 复用 Common Design；本文补充 AES 的容器决策、页面壳层、页面级操作位置和布局基线。未明确覆盖的事项由 `prd-design-code` 继续采用 Common Design。
+> `Coverage: extend`
 
 ## 1. 定位与 Common Design 关系
 
@@ -18,6 +19,8 @@
 | 真实组件与实现 | 不属于 Template | Component 层优先匹配 AES 稳定业务封装 |
 
 只覆盖本文明确列出的 AES 差异；其他 Common 规则继续有效，不得将局部差异扩大为对 Common 列表模板的整体替换。
+
+执行顺序固定为：先确定页面类型、列表角色、容器、区域和任务模式；再核对该类型的前端封装状态；随后按封装状态使用前端封装或视觉与业务参照；最后填写 `templateId` 和 `encapsulation`。视觉参照不得替代前端封装核验。
 
 ## 2. 列表模板决策链
 
@@ -39,18 +42,18 @@
 4. 需要保留父页面上下文，同时承载较完整的筛选、浏览或行操作时使用 `drawer`。
 5. 数据量只用于评估分页、搜索和性能，不作为 Modal 与 Drawer 的单一分界；不得使用“少于 20 条必选 Modal、超过 20 条必选 Drawer”的机械规则。
 
-### 2.2 第二步：选择标准模板
+### 2.2 第二步：确定页面区域组合
 
 #### 独立主列表
 
 `containerType=full-page` 时，根据页面区域选择以下标准模板：
 
-| 中文页面类型 | `templateId` | 页面结构 | 使用条件 |
-| --- | --- | --- | --- |
-| 基础表格页 | `page-table-basic` | 表格主区 | 不需要持续展示概览或稳定层级 |
-| 左树表格页 | `page-table-tree` | 左树 + 表格主区 | 需要按组织、分组、资产等稳定层级切换数据范围 |
-| 概览表格页 | `page-table-overview` | 概览区 + 表格主区 | 需要先判断持续展示的业务汇总，再查看明细 |
-| 概览左树表格页 | `page-table-overview-tree` | 概览区 + 左树 + 表格主区 | 同时需要业务汇总和稳定层级范围 |
+| 页面结构 | 区域组合 | 使用条件 |
+| --- | --- | --- |
+| 基础表格页 | 表格主区 | 不需要持续展示概览或稳定层级 |
+| 左树表格页 | 左树 + 表格主区 | 需要按组织、分组、资产等稳定层级切换数据范围 |
+| 概览表格页 | 概览区 + 表格主区 | 需要先判断持续展示的业务汇总，再查看明细 |
+| 概览左树表格页 | 概览区 + 左树 + 表格主区 | 同时需要业务汇总和稳定层级范围 |
 
 1. 用户、Theme 或当前真实页面已明确模板时直接采用。
 2. 存在必须持续展示且能辅助当前任务判断的业务汇总时增加概览区。
@@ -60,10 +63,10 @@
 
 #### 容器内辅助列表
 
-| 中文页面类型 | `templateId` | 固定容器 |
-| --- | --- | --- |
-| 弹窗列表页 | `page-list-modal` | `modal` |
-| 抽屉列表页 | `page-list-drawer` | `drawer` |
+| 页面结构 | 固定容器 |
+| --- | --- |
+| 弹窗列表页 | `modal` |
+| 抽屉列表页 | `drawer` |
 
 - Modal、Drawer 不再组合概览或左树形成新的 `templateId`；确需增加特殊区域时，在标准模板上记录 `optionalRegions` 和依据。
 - 特殊区域改变了主要任务、主容器或标准区域顺序时，不得继续伪装成标准模板，应重新判断是否升级为独立页面。
@@ -85,9 +88,26 @@
 - `immediate` 只用于用户点击对象即可完成选择的短流程；多选默认使用 `confirm`。
 - 勾选状态、数量限制和跨页选择继续读取 Table Selection Feature；Template 不重复定义。
 
+### 2.4 第四步：页面类型、templateId 与封装状态
+
+完成列表角色、容器、区域组合、任务模式和视觉业务参照核对后再执行本节。`templateId` 和 `encapsulation` 是页面设计结果，不参与列表结构选型；即使本节在文档中位于视觉证据之前，也不得跳过前端封装状态核验。
+
+| 页面类型 | 已确认结构 | `templateId` | `encapsulation` |
+| --- | --- | --- | --- |
+| 基础表格页 | 表格主区 | `page-table-basic` | `true` |
+| 左树表格页 | 左树 + 表格主区 | `page-table-tree` | `true` |
+| 概览表格页 | 概览区 + 表格主区 | `page-table-overview` | `true` |
+| 概览左树表格页 | 概览区 + 左树 + 表格主区 | `page-table-overview-tree` | `true` |
+| 弹窗列表页 | Modal + 列表主区 | `page-list-modal` | `true` |
+| 抽屉列表页 | Drawer + 列表主区 | `page-list-drawer` | `true` |
+| 自定义页面类型 | 没有既有 AES Template 可承载的列表结构 | `custom` | `false` |
+
+- `encapsulation: true` 时优先复用页面骨架，未覆盖的列表区域和内部能力继续按本 Template 及下游契约补充。
+- `encapsulation: false` 时仍完整输出列表结构，不得为了获得前端封装删减概览、层级、容器或任务模式。
+
 ## 3. 页面骨架
 
-### 3.3 页面级区域职责
+### 3.1 页面级区域职责
 
 列表 Template 负责页面级结构，Pattern 不得重新决定以下内容：
 
@@ -103,13 +123,13 @@
 
 Template 输出上述区域及顺序；Table Management Pattern 只处理列表主区内部的筛选接入、工具栏、表格、分页和查询结果状态。
 
-### 3.4 页面级状态与列表状态
+### 3.2 页面级状态与列表状态
 
 - 页面级加载、空状态、异常状态和权限状态由 Template 统一定义。
 - 表格查询结果的加载、无结果和请求失败由 Table Management Pattern 补充。
 - Pattern 不得因为筛选、勾选或批量操作改变页面容器、概览、左树、Footer 或刷新位置。
 
-### 3.1 AES 独立主列表
+### 3.3 AES 独立主列表
 
 ```text
 AES 产品壳层
@@ -129,7 +149,7 @@ AES 产品壳层
 - 概览只展示 Theme 或 Pattern 已确认的业务指标；左树只用于稳定范围切换，不代替普通筛选。
 - 页面存在业务提示时，Template 预留 `noticeRegion`；提示条的展示条件和内容读取 `../04-patterns/page-notice.md`。
 
-### 3.2 Modal、Drawer 辅助列表
+### 3.4 Modal、Drawer 辅助列表
 
 ```text
 Modal / Drawer
@@ -148,7 +168,7 @@ Modal / Drawer
 Common Design 正文与当前 Template Registry 对 `page-list-modal`、`page-list-drawer` 的 Footer 定义不一致。输出前必须以 `prd-design-code` 实际使用的 Template Registry 为校验基线，同时保留真实任务语义：
 
 - `footerMode=confirm-cancel` 时直接使用标准 `templateId` 和注册表 Footer。
-- `footerMode=none` 或 `close` 与注册表不一致时，使用 `templateId: custom`、`baseTemplateId: page-list-modal | page-list-drawer`，并在 `override.affectedRules` 记录 `footer-contract`。
+- `footerMode=none` 或 `close` 与注册表不一致时，只有页面结构本身没有既有 AES Template 可承载时才使用 `templateId: custom`，并在 `override.affectedRules` 记录 `footer-contract`。
 - 不得为了通过校验给只读浏览或即时选择流程增加无意义的“确定 / 取消”。
 - Common Design 与 `prd-design-code` 注册表统一支持可变 Footer 后，应取消上述临时 `custom` 兼容方式，恢复标准 `templateId`。
 
@@ -163,12 +183,55 @@ Common Design 正文与当前 Template Registry 对 `page-list-modal`、`page-li
 - 独立主列表刷新使用 `page-header-top-right`；Modal、Drawer 只使用 `local-toolbar` 或 `none`。
 - 用户指定参考页面或同模块已有稳定实现不同时，记录 `referencePage` 和差异依据，不静默混用两套布局基线。
 
+## 实现绑定
+
+- `encapsulation: true` 时在编码阶段核验目标分支中模板的真实入口和参数，未覆盖的区域按本 Template 契约实现。
+- `encapsulation: false` 时不得声称复用了页面模板，按本 Template 契约和项目组件实现。
+- `templateId` 不改变筛选、导入、状态和确认等 Pattern / Feature 决策。
+
+## 视觉与业务证据
+
+本节用于页面还原和视觉校验，不改变前面的页面类型、容器、区域、任务模式、Footer 或刷新位置判断。
+
+- `encapsulation: true` 时，先核验并优先使用前端页面封装；本节只用于校验封装效果、补充封装未覆盖区域和还原 AES 业务差异。
+- `encapsulation: false` 时，前端没有可直接调用的页面封装，本节作为页面结构和视觉还原参考，结合当前 Template 契约自行实现。
+- 参考页面不自动成为当前页面的字段、操作、筛选、状态或权限规则；这些内容仍由当前需求和上游设计契约决定。
+
+以下路径均相对于前端工程 `/Users/sangfor/Documents/aes-mgr-front0830`。
+
+### 独立主列表
+
+| 模板结构 | 参考页面 | 关键源码 |
+| --- | --- | --- |
+| 基础表格页 | 安全事件列表 | `app/aes-incident/src/view/mod_sec_event/index.vue` |
+| 表格主体 | 安全事件表格 | `app/aes-incident/src/view/mod_sec_event/event_table/index.vue` |
+| 概览表格页 | 病毒查杀列表 | `app/aes-virus/src/view/virus_list/index.vue`、`app/aes-virus/src/view/virus_list/components/virus_statistics.vue`、`app/aes-virus/src/view/virus_list/components/virus_table.vue` |
+| 概览左树表格页 | 终端列表 | `app/aes-agent/src/view/agent_list/index.vue` |
+| 左树结构 | 终端分组树 | `app/aes-agent/src/view/agent_list/components/agent_list_tree.vue` |
+| 表格与概览 | 终端列表主区 | `app/aes-agent/src/view/agent_list/components/agent_list_table.vue`、`app/aes-agent/src/view/agent_list/components/agent_list_table_banner.vue` |
+
+当前工程未找到比终端列表更完整的独立“左树表格页”基准。设计不包含概览区的左树列表时，可以参考终端列表的左右区域组合，但不得照搬其概览 Banner。
+
+### 容器内辅助列表
+
+| 模板结构 | 参考页面 | 关键源码 |
+| --- | --- | --- |
+| Modal 列表 | 资产适用策略检测 | `app/app-lib/src/business-comp/policy_common/modal/check_policy_modal/src/index.vue` |
+| Drawer 列表 | 策略关联资产 | `app/app-lib/src/business-comp/policy_assets_drawer/src/index.vue` |
+
+### 公共表格容器
+
+- 源码：`app/app-lib/src/business-comp/table_container/src/TableContainer.vue`
+- 公开入口：`AES__APP_LIB/TableContainer`
+
+参考现有页面时，只复用与目标 `templateId` 对应的页面结构、容器关系和区域组合。业务字段、操作、筛选条件和接口逻辑仍由当前需求决定。
+
 ## 6. 输出契约
 
 ```yaml
-templateContract:
+template_contract:
   templateId: page-table-basic | page-table-tree | page-table-overview | page-table-overview-tree | page-list-modal | page-list-drawer | custom
-  baseTemplateId: ""
+  encapsulation: true | false
   customReason: ""
   templateSource: Common Design 标准模板 + aes-product-design/references/03-templates/list.md
   navigationType: left-shaped | ""
@@ -206,7 +269,8 @@ templateContract:
 - `primary + full-page` 使用四种 `page-table-*` 之一，`navigationType=left-shaped`，`refreshPlacement=page-header-top-right`。
 - `auxiliary + modal` 使用 `page-list-modal`；`auxiliary + drawer` 使用 `page-list-drawer`；两者的 `navigationType` 留空。
 - `full-page` 的 `footerMode` 固定为 `none`；Modal、Drawer 按 `interactionMode` 和 `selectionCommitMode` 决定 Footer。
-- 只有第 4 节 Footer 兼容门禁命中时，才允许 `templateId=custom`；此时必须填写对应标准 `baseTemplateId`、`customReason`、覆盖原因和 `footer-contract`。
+- `templateId` 按第 2.4 节填写；无论是否封装都沿用该页面模板的稳定编号，`encapsulation: true` 时该编号同时与前端页面封装编号一致。
+- 没有既有 AES Template 可承载时填写 `templateId: custom`、`encapsulation: false` 和 `customReason`；Footer 差异记录在 `override.affectedRules`。
 - 标准模板的 `requiredRegions`、`regionOrder` 和默认 Footer 先继承 Template Registry；本文差异通过 `override` 明确记录。
 - 独立主列表的 `override.affectedRules` 至少记录 `navigation-support`、`header-owner`、`refresh-placement` 和 `spacing-baseline`。
 - `componentContract` 先继承注册表的区域要求，真实组件由 Component 层核对 AES 稳定业务封装后回填；不得把 Common 的底层组件推荐直接当作 AES 最终实现。

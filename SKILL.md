@@ -20,7 +20,7 @@ metadata:
 | --- | --- |
 | `prd-design-code` | 分析需求、识别产品和当前层级、编排 AES Product Design 与 Common Design、汇总最终交付物 |
 | AES Product Design | 提供 AES 业务事实、产品差异、既有设计模式、业务组件映射和专属设计规则 |
-| Common Design | 提供跨产线通用设计规则，按 Coverage 关系补充 AES 未覆盖的通用事项 |
+| Common Design | 提供跨产线通用设计规则，按 Coverage 补充 AES 未覆盖的通用事项 |
 
 AES Product Design 不主动调用或反向编排另外两个 Skill。需要 Common Design、需要返回上层重算或存在知识缺口时，将结构化结果返回 `prd-design-code`。
 
@@ -43,10 +43,22 @@ Navigation → Theme → Template → Pattern → Feature → Component → Copy
 | Template | 页面类型、主容器、主要区域及区块顺序；允许页面级决策链 | 区域内部复杂交互方案 |
 | Pattern | 在已确定 Template 内执行上游锁定方案，或对未锁定事项选择、组合区域级或复杂交互方案 | 改变业务模型或主容器 |
 | Feature | 已确定采用后可完整执行的单项方案；可含流程、状态、校验和异常 | 在多套设计方案中选择 |
-| Component | 真实组件、稳定业务封装、实现入口和复用边界 | 反推上层方案 |
+| Component | 真实组件、稳定业务封装、实现入口和复用边界；可以是 AES 业务封装、IDUX 组合或项目通用组件 | 反推上层方案 |
 | Copy | 校准已确定语义的用户可见文案和 AES 术语 | 新增业务语义或改变方案 |
 
 `Pattern`、`Feature` 与 `Component` 是三个独立层级：Pattern 对未锁定事项负责选择和组合方案，对锁定事项只负责执行；Feature 负责执行已选定的单项能力；Component 负责真实 AES 业务封装和实现映射。不得将三者合并为旧版的“业务处理 / 业务组件”阶段。
+
+### Template、Feature 与 Component 的封装约定
+
+- `templateId` 是 AES 页面模板的稳定编号和名称；是否采用某种页面结构仍由使用条件和上游锁定结果决定。
+- `encapsulation: true` 时，`templateId` 必须与前端已有页面模板编号一致；`encapsulation: false` 时仍须填写该页面模板的稳定 `templateId`，不表示存在可直接调用的页面代码。
+- `templateId` 可以为 `custom`；没有既有 AES 模板可承载时使用，不阻断当前设计或开发，也不得为了获得编号改变已确认的页面结构。
+- `featureId` 仅用于与前端编码 skill 映射；是否调用 Feature 仍由使用条件和上游锁定结果决定。
+- `featureId` 可以为空；没有正式 ID 不阻断当前设计或开发，也不得编造新的 ID。
+- `templateId`、`featureId` 和 `componentId` 不表示一定存在可复用封装；`encapsulation: true | false` 是唯一的封装判断。
+- `encapsulation: true` 时优先复用已有封装，未覆盖部分继续按当前层契约补充；`encapsulation: false` 时按当前层完整契约自行实现，不得声称复用了前端封装。
+- Component 的 `componentId` 只表示实现入口，不代表所有相似页面都必须使用；使用前仍需先判断适用条件。
+- 前端封装、IDUX 组合和未封装能力都必须保持同一业务契约；封装不能覆盖或改写 Theme、Template、Pattern、Feature 已确认的业务规则。
 
 ### Theme 锁定下游方案
 
@@ -86,23 +98,31 @@ prescribed_downstream_contracts:
 
 层间返回以双方联合结果为准：下层发现冲突、缺口或前置结论失效时，`return_to_stage` 指向最早受影响的共同上游层；不得因为问题来自 Common Design 就跳过 AES，也不得因为当前调用的是 AES Product Design 就只返回 AES Theme。
 
-## Coverage 与知识来源
+## Coverage
 
-Coverage 只决定当前阶段命中的具体设计能力如何联合读取 AES 与 Common Design，不把不同阶段的能力强行放进同一张枚举表。阶段是否进入、是否跳过以及返回哪一层，由双方的整体路由和上游契约共同决定；关系必须以命中的具体 Reference 正文和当前阶段约束为准，并在结果中逐项记录。
+Coverage 是 AES 对具体设计能力的唯一覆盖声明，必须由当前层 Index 或具体 Reference 显式给出。Coverage 只描述 AES 是否改变该能力，不负责编排其他 Skill 的读取流程。
+
+Coverage 只能取以下值：
+
+- `inherit`：AES 不改变该能力。
+- `extend`：AES 增加产品专属规则；未冲突的通用规则继续生效，同一规则冲突时以 AES 为准。
+- `override`：AES 对该能力提供完整或冲突定义，AES 规则是该能力的最终规则。
+
+未声明 Coverage 时不得自行推断为 `inherit`、`extend` 或 `override`，必须记录 Coverage 缺失。未命中 AES Reference 时，该能力不属于 AES 覆盖范围，由 `prd-design-code` 按其流程处理通用设计基准。
 
 | 当前阶段 | 读取原则 |
 | --- | --- |
 | Navigation | 业务菜单、入口和层级事实以 AES 导航 Reference 与需求/现状证据为准；Common Design 可补充通用导航约束或影响检查，但不得补造 AES 菜单、入口或层级。 |
-| Theme | 先联合匹配 AES 与 Common Design Theme；命中 AES Theme 时按 AES 的 `override` 规则处理，不再读取 Common Design 同层 Theme；AES 未命中时可读取命中的 Common Design Theme；两侧都未命中则跳过 Theme。 |
-| Template | 先执行 Theme 锁定的 Template；只对 Theme 未指定事项联合读取 AES `03-templates/index.md` 与 Common Design 页面模板路由。命中 AES 后，`extend` 或 `override` 以具体 AES Template 正文判定；未命中 AES 时采用 Common Design Template。 |
-| Pattern | 先执行 Theme 锁定的 Pattern 及其参数，不重新选型；只对 Theme 未指定事项联合读取 AES `04-patterns/index.md` 与 Common Design Pattern 路由，并按具体 Reference 判断 `extend` 或 `override`。 |
-| Feature | Theme 或 Pattern 已锁定 Feature 时直接完整执行；只对未指定的单项能力继续匹配 AES 或 Common Design Feature。命中 AES Feature 时按该 Feature 的关系声明读取。 |
-| Component | Theme、Pattern 或 Feature 已锁定组件语义或映射时直接执行并验证；只对未指定的实现映射继续匹配 AES Component、Common Design 或项目代码。 |
+| Theme | 先执行 AES Theme 的显式 Coverage；未命中 AES Theme 时再由 `prd-design-code` 处理通用主题。 |
+| Template | 先执行 Theme 锁定的 Template；其余事项按 AES Template 的显式 Coverage 执行。未命中 AES Template 时由 `prd-design-code` 处理通用模板。 |
+| Pattern | 先执行 Theme 锁定的 Pattern 及其参数；其余事项按 AES Pattern 的显式 Coverage 执行。未命中 AES Pattern 时由 `prd-design-code` 处理通用模式。 |
+| Feature | Theme 或 Pattern 已锁定 Feature 时直接完整执行；其余事项按 AES Feature 的显式 Coverage 执行。未命中 AES Feature 时由 `prd-design-code` 处理通用能力。 |
+| Component | Theme、Pattern 或 Feature 已锁定组件语义或映射时直接执行并验证；其余事项按 AES Component 的显式 Coverage 执行。未命中 AES Component 时由 `prd-design-code` 处理通用组件或项目代码。 |
 | Copy | 固定采用 `extend`：读取 AES 术语与 Common Design 通用文案，AES 术语和表达优先。 |
 
-`inherit`、`extend`、`override` 不是阶段清单，而是每项命中能力的关系标记：`inherit` 表示采用 Common Design，`extend` 表示保留 Common Design 并增加 AES 约束，`override` 表示以 AES Reference 为唯一业务依据。关系记录必须同时说明 AES、Common Design 是否命中，以及当前具体 Reference 是否要求合并或替代；不得把“命中 AES”自动等同于所有阶段的 `override`。Navigation 的业务事实仍以 AES 为准，Template、Pattern、Feature 和 Component 按具体 Reference 与双方命中结果判定。
+Coverage 必须逐项记录，不得把“命中 AES”自动等同于 `override`。Coverage 的具体含义以本节定义为准；AES Reference 只需声明自身 Coverage 和负责的 AES 规则范围。
 
-不得只返回“AES 优先”。必须逐项说明设计能力、关系、命中的 AES Reference、AES 已确定规则、是否读取 Common Design、Common Design 待补充项和知识缺口。Common Design 不得补造 AES 专属业务对象、状态流转、权限、数量限制、生效关系或生命周期。
+不得只返回“AES 优先”。必须逐项说明设计能力、Coverage、命中的 AES Reference、AES 已确定规则和知识缺口。通用设计不得补造 AES 专属业务对象、状态流转、权限、数量限制、生效关系或生命周期。
 
 ## 读取路由
 
@@ -117,7 +137,7 @@ Coverage 只决定当前阶段命中的具体设计能力如何联合读取 AES 
   ↓
 锁定事项直接执行；未指定事项联合匹配双方 Reference
   ↓
-按命中能力的 `inherit / extend / override` 或阶段专属读取原则决定来源
+按命中能力显式声明的 `Coverage` 决定 AES 规则范围
   ↓
 返回当前层契约，再进入下一层或返回上层重算
 ```
@@ -163,9 +183,9 @@ Coverage 只决定当前阶段命中的具体设计能力如何联合读取 AES 
 1. 归属 AES Product Design；
 2. 是 AES 产线专属设计规范或索引；
 3. 不作为 Common Design 通用规范；
-4. 当前文件明确规定的 AES 规则优先，未覆盖事项按 Coverage 关系处理。
+4. 当前文件明确规定的 AES 规则优先，未覆盖事项按 Coverage 处理。
 
-统一身份声明不改变 Coverage：`override` 是否读取 Common Design，仍以 Coverage 和 Reference 正文为准。
+统一身份声明不改变 Coverage：`override` 的适用范围仍以本文件的 Coverage 声明和 Reference 正文为准。
 
 ## 输入契约
 
@@ -204,13 +224,16 @@ aes_stage_result:
   matched_references: []
   resolved_design_abilities:
     - design_ability: ""
-      relation: inherit | extend | override
+      Coverage: inherit | extend | override
       aes_references: []
       matched_aes_rules: []
       common_design_required: true | false
       common_design_fallbacks: []
       reference_gaps: []
       conflicts: []
+      featureId: ""
+      componentId: ""
+      encapsulation: true | false
   stage_contract:
     navigation_contract: {}
     theme_contract: {}
@@ -240,7 +263,7 @@ aes_stage_result:
 
 ### 字段约束
 
-- 每项 `design_ability` 单独记录；未命中 AES Reference 的 Feature、Component 等能力才可填 `inherit`，Navigation 未涉及 Common Design 时不得机械填入 `inherit`。
+- 每项 `design_ability` 单独记录；只有 AES Reference 显式声明 `Coverage: inherit` 时才可填写 `inherit`。未命中 AES Reference 不得填写 `inherit`，应记录为 AES 未覆盖。
 - `common_design_required` 按 AES 与 Common Design 的联合命中结果、当前阶段读取原则和具体 Reference 判定，不得由 `inherit / extend` 字面机械推导：AES 独占的 Navigation 业务事实、Theme、Feature、Component 可为 `false`；仅命中或需要补充 Common Design 时为 `true`；Copy 固定为 `true`；Template、Pattern 按双方命中结果和具体 Reference 的覆盖声明填写。
 - `override` 的 `common_design_required` 默认 `false`，只有正文明确要求补充具体事项时才可为 `true`。
 - `stage_contract` 只填当前层对应对象，其他对象留空；Theme 对下游的锁定方案统一写入 `downstream_requirements.prescribed_downstream_contracts`，不得混入其他层的 `stage_contract`。

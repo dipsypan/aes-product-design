@@ -1,5 +1,6 @@
 # AES 表单管理 Pattern
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用表单规范。本文明确规定的 AES 表单方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 定位
@@ -48,12 +49,14 @@ form_pattern_input:
 | 所有选项都需要短解释和对比 | 单选/多选卡片 |
 | 仅个别选项需要补充解释 | 调用 `../05-features/info-icon.md` |
 | 功能总开关控制一组下属配置 | Switch |
-| 策略或规则自身的启用/禁用状态 | Radio，文案使用“启用 / 禁用” |
+| 业务对象自身的启用/禁用状态 | 读取 [`enable-disable.md`](enable-disable.md)；表单保存场景执行其 `form-submit-choice` 方案 |
 | 单一参数是否生效且无下属配置 | Checkbox |
 | 资产适用或执行范围 | 调用 `../05-features/asset-scope.md` |
 | 有明确数值范围且输入时需持续知晓 | 调用 `../06-components/input-number-range-tip.md` |
 
 当多个控件都合理且选择会显著影响任务效率时，记录决策依据；缺少关键输入时返回待确认，不按个人偏好选型。
+
+业务对象的启用状态不在本 Pattern 内重新选型。[`enable-disable.md`](enable-disable.md) 已选择 `form-submit-choice` 时，本 Pattern 负责 Radio 的字段布局、依赖、校验和随表单提交；不得改为 Switch 或即时状态入口。
 
 ## 4. 解释内容与卡片
 

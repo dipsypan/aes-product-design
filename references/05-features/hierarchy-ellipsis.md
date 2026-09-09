@@ -1,6 +1,8 @@
 # AES 多级路径省略 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 调用场景
 
@@ -11,6 +13,12 @@
 | 资产分组/组织架构 | `研发部门/前端组/前端一组` |
 | 页面面包屑 | `安全事件/安全事件详情` |
 | 文件路径 | `C:\users\administrator\appdata\local\winlogon.exe` |
+
+## Feature 身份与封装
+
+- `featureId: hierarchy-ellipsis`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
 
 ## 2. 通用规则
 

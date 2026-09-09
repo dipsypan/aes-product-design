@@ -1,6 +1,8 @@
 # AES 任务中心 Theme Model
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Theme Model，不作为 Common Design 的通用主题规范。本主题能力在 Coverage 中为 `override`；缺失的 AES 业务知识进入 `reference_gaps`，不得自动回退 Common Design。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Theme Model，不作为 Common Design 的通用主题规范。
+> `Coverage: override`
+> 缺失的 AES 业务知识进入 `reference_gaps`，不得自动回退 Common Design。
 
 ## 调用契约
 

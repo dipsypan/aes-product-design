@@ -1,10 +1,12 @@
 # AES 业务对象状态切换 Pattern
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 定位与命中
 
-本 Reference 统一 AES 中既有业务对象的状态切换样式和交互，例如策略、规则和任务计划的「启用 / 禁用」，以及病毒的「待处置 / 已处置」。适用于列表、详情、抽屉及其他可直接修改对象状态的位置。
+本 Reference 统一 AES 中既有业务对象即时状态切换的资格、确认、提交和回写，例如策略、规则和任务计划的「启用 / 禁用」，以及病毒的「待处置 / 已处置」。适用于列表、详情、抽屉及其他可直接修改对象状态的位置。
 
 出现用户可执行的离散状态变更时自动执行本 Reference，不要求用户额外说明使用状态下拉或二次确认。若同一状态同时出现在列表和详情等多个入口，所有入口必须共同执行。
 
@@ -12,14 +14,14 @@
 
 - 执行中、成功、失败等由系统推进的过程或结果状态。
 - 只读状态，或状态集合、可达关系和操作后果尚未明确的场景。
-- 新增或编辑表单中的配置项开关；此类控件执行对应表单和业务 Reference。
+- 新增或编辑表单中随整表保存的配置项；业务对象的启用状态先执行 `enable-disable.md`，其他配置执行对应表单和业务 Reference。
 
 状态集合、可达关系、权限和业务后果由需求、主题 Reference、接口或真实页面提供，本 Reference 不自行补充。
 
-## 统一样式
+## 单条入口统一样式
 
 - 使用「状态图标 + 状态文案 + 下拉箭头」，完整区域为同一点击目标；不得使用 Switch 或另设普通按钮替代。
-- 启禁用优先复用 `StatusDropDownMenu`；已有专用状态组件时复用真实组件，例如病毒状态使用 `DisposeCell`。不得在业务页面自行拼装样式。
+- 启禁用由 `enable-disable.md` 路由；具体状态入口由上游语义契约交给后续 Component 阶段匹配。本 Pattern 不为启禁用分支指定组件名、引用路径或实现 API。
 - 菜单只展示当前对象允许到达的状态，当前状态保持选中；再次选择当前状态不触发确认、请求或反馈。
 - 展开时箭头旋转，关闭后恢复；状态变化不得引起入口或周边布局跳动。
 - 不可操作时保留当前图标和文案，入口不可展开，并在已有承载或 Tooltip 中说明具体原因。
@@ -37,7 +39,7 @@
 
 | 状态 | 复用基线 |
 | --- | --- |
-| 启用 / 禁用 | `StatusDropDownMenu` 现有状态样式 |
+| 启用 / 禁用 | 先执行 `enable-disable.md`，再由 Component 阶段匹配状态入口 |
 | 待处置 / 已处置 | 病毒列表和详情的 `DisposeCell` 状态样式 |
 
 ## 单条切换
@@ -83,7 +85,7 @@ confirmation.object_count = executable_count = request_count
 
 ## 业务要求
 
-- 所有可操作的业务对象状态使用统一状态下拉，没有使用 Switch；列表与详情等入口保持一致。
+- 所有单条即时状态入口使用与状态语义匹配的统一状态下拉，没有使用 Switch；列表与详情等入口保持一致。
 - 新状态优先复用 AES 视觉语义；无现成样式时使用 AES 语义色和项目当前版本的 IDUX 图标，没有自定义图标或仅用颜色表达状态。
 - 单条切换选择当前状态不产生确认、请求或反馈；选择不同状态直接进入分级确认。
 - 取消确认、请求失败或刷新失败时不会提前显示目标状态，提交期间不能重复触发。
@@ -91,3 +93,19 @@ confirmation.object_count = executable_count = request_count
 - 批量操作先调用 `action-eligibility.md`，并按每个目标状态分别计算资格；状态相同的对象不会重复提交。
 - 批量确认数量、实际请求数量和最终可执行数量一致，跳过范围在提交前可见。
 - 成功刷新后，列表与详情等入口展示同一业务真值，并保留各自页面上下文。
+
+## 输出契约
+
+```yaml
+pattern_contract:
+  pattern_id: status-change
+  decision_inputs: [current_status, target_status, permission, selected_objects]
+  selected_solution: single-or-batch-status-change
+  required_features: [action-eligibility, tiered-confirmation]
+  required_components: []
+  component_notes: 由状态语义或上游 Pattern 输出能力要求，再由 Component 阶段匹配具体实现
+  state_contract: {}
+  return_to_template: false
+  return_reason: ""
+  pattern_gaps: []
+```

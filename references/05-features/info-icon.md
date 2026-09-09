@@ -1,12 +1,20 @@
 # AES 小 i 信息提示 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 使用边界
 
 本 Reference 用于 AES 页面中解释字段、表头或单个选项含义的小 i 信息提示。它只定义小 i 的使用条件、颜色、位置、交互和 Tooltip 内容，不重新决定业务字段、页面容器或业务模型。
 
 当界面中的概念、字段或选项存在理解门槛，且用户不需要持续查看这段解释时，使用小 i + Tooltip。
+
+## Feature 身份与封装
+
+- `featureId: info-icon`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，通用 Tooltip 能力按项目组件库承载。
 
 ## 适用场景
 

@@ -1,5 +1,7 @@
 # AES 表格导入规则
 
+> `Coverage: override`
+
 ## 使用边界
 
 本 Reference 用于产品内列表的数据批量导入。
@@ -7,6 +9,16 @@
 - 先由列表模板确定业务对象和字段，再调用本 Reference。
 - 本 Reference 只定义导入入口、流程、状态、结果和异常反馈，不定义具体业务字段、权限模型或后端接口。
 - 资产身份信息导入属于独立业务流程，以 MAC 地址匹配资产并更新身份字段，不适用本 Reference。
+
+## Feature 身份与封装
+
+- `featureId: import`
+- `encapsulation: true`
+- `componentId: BatchImportModal`，并按需配合导入进度、结果和失败弹窗封装。
+- 来源：`AES__APP_LIB/Impex`
+- 封装负责弹窗承载和通用阶段切换；本 Feature 仍负责业务字段、冲突策略、状态、结果、异常和列表更新。
+- 编码阶段必须核验目标分支的实际导出名、Props、Events 和任务状态接口。
+- 封装不足或业务行为超出封装范围时，按本 Feature 契约补充实现，不得假设已有完整导入能力。
 
 ## 三阶段布局契约
 

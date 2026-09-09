@@ -1,10 +1,19 @@
 # AES 数据导出 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。数据导出在 Coverage 中为 `override`：本文作为当前能力的唯一设计来源，缺失的 AES 导出规则进入 `reference_gaps`，不得自动回退 Common Design。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: override`
+
+本文作为当前能力的唯一设计来源，缺失的 AES 导出规则进入 `reference_gaps`，不得自动回退 Common Design。
 
 ## 使用边界
 
 本 Feature 在页面方案已确定提供导出能力后读取，完整执行“确定范围 → 确认 → 创建任务 → 下载结果”。它不判断页面是否应该提供导出，也不改变筛选和表格方案。
+
+## Feature 身份与封装
+
+- `featureId: export`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
 
 ## 执行流程
 

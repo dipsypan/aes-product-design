@@ -1,36 +1,33 @@
 # AES 资产选择器组件
 
+> `Coverage: override`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属组件映射，不作为 Common Design 的通用组件规范。本组件能力整体采用 AES `override`，本文定义的规则直接以 AES 为准；未登记的其他组件能力才由 `prd-design-code` 调用 Common Design 或依据项目已有代码处理。资产范围、包含与排除关系由 `../05-features/asset-scope.md` 定义。
 
-## 资产选择器
+## 使用条件
 
-必须调用 AES 已封装的资产选择器：
+- 业务需要选择全部资产、指定资产或资产组。
+- 选择结果会影响策略、任务或规则的生效范围。
+- 业务需要资产搜索、已选数量、数量上限、路径、空状态或基础校验能力。
 
-```text
-AssetSelectorFormItem
-来源：AES__APP_LIB/GroupAssetSelector
-```
+## 不适用与禁止事项
 
-禁止调用 Common Design 中的通用选择器，也不得在业务页面重新实现资产或资产组选择逻辑。
+- 固定全局生效且不允许配置资产范围时，不调用该组件。
+- 不得调用通用选择器，也不得在业务页面重新实现资产或资产组选择面板。
 
-选择器统一沿用 AES 已有的资产和资产组选择、搜索、已选数量、上限、路径、空状态和校验能力。
+## Component 身份
 
-## 前端参考基准
+- `componentId: AssetSelectorFormItem`
+- `encapsulation: true`
+- 来源：`AES__APP_LIB/GroupAssetSelector`
 
-实现资产选择器时，以 AES 前端工程 `aes-mgr-front0830` 中的以下代码为准：
+## 复用契约
 
-- 公开入口：`app/app-lib/src/business-comp/group_asset_selector/index.ts`
-- 表单组件：`app/app-lib/src/business-comp/group_asset_selector/components/AssetSelectorFormItem.vue`
-- 选择器主体：`app/app-lib/src/business-comp/group_asset_selector/components/GroupAssetSelector.vue`
-- 待选区域：`app/app-lib/src/business-comp/group_asset_selector/components/GroupAssetSelectPanel.vue`
-- 已选区域：`app/app-lib/src/business-comp/group_asset_selector/components/SelectedTablePanel.vue`
-- 类型定义：`app/app-lib/src/business-comp/group_asset_selector/types.ts`
+- 业务表单优先直接复用该封装，不得调用 Common Design 通用选择器，也不得重新实现资产或资产组选择逻辑。
+- 资产和资产组选择、搜索、已选数量、上限、路径、空状态和基础校验沿用封装默认能力。
+- 编码阶段必须核验目标分支的实际导出名、路径、Props、Events 和调用方式。
 
-优先参考以下真实页面或业务实现：
+## 业务补充
 
-- 策略适用对象：`app/app-lib/src/business-comp/policy_common/object_form/src/index.vue`
-- 策略配置页面：`app/aes-policy/src/view/mod_policy/policy_config/index.vue`
-- 病毒任务执行对象：`app/aes-task/src/view/task_create/components/virus_task/execution_object.vue`
-- 升级策略适用对象：`app/aes-agent/src/view/upgrade_manage/upgrade_strategy_config/index.vue`
-
-业务表单优先从 `AES__APP_LIB/GroupAssetSelector` 引入 `AssetSelectorFormItem`，不得复制或直接拼装内部的选择面板。参考代码前必须核对目标分支中的公开入口、组件属性和实际调用，不得根据旧页面中的调用方式虚构 Props 或实例方法。
+- 当前业务负责定义资产范围模式、字段名称、权限、必填条件、数量限制和数据转换。
+- 生效资产计算、排除关系及展示语义由 [`../05-features/asset-scope.md`](../05-features/asset-scope.md) 决定。
+- 未命中 `componentId`、封装能力不足或需要超出封装边界的业务行为时，继续按 [`../05-features/asset-scope.md`](../05-features/asset-scope.md) 的业务契约补充实现。

@@ -1,6 +1,8 @@
 # AES 文字链 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 展示方式
 
@@ -10,6 +12,12 @@
 | :--- | :--- |
 | 当前页面打开抽屉、弹窗或展开内容 | 蓝色文字，不显示图标 |
 | 跳转其他页面或业务模块 | 蓝色文字 + 右侧 `jumpz` 图标 |
+
+## Feature 身份与封装
+
+- `featureId: link-navigation`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
 
 ## 2. 当前页面打开
 

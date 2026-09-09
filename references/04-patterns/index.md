@@ -1,10 +1,10 @@
 # AES Pattern Index
 
-> **归属：AES Product Design。** 本 Index 是 AES（深信服下一代端点安全）产线专属 Pattern 索引，不作为 Common Design 的通用交互索引。本文明确规定 AES 侧 Pattern 规则；阶段是否合并或覆盖由具体 Reference 与 Common Design 联合决定。
+> **归属：AES Product Design。** 本 Index 是 AES（深信服下一代端点安全）产线专属 Pattern 索引，不作为 Common Design 的通用交互索引。每个 Pattern 必须显式声明 `Coverage`，本文只登记 AES 侧的覆盖声明和路由。
 
 Pattern 在 Template 已确定页面类型、主容器和页面区域后读取。Theme 或用户已锁定具体 Pattern 及参数时，Pattern 只执行、展开和验证，不得重新选型；只有未锁定事项才根据业务条件选择并组合区域级或复杂交互方案。Pattern 可以调用 Feature 和 Component，但不修改 Theme 的业务事实，也不重新选择页面主容器。
 
-每个具体 Pattern Reference 的关系根据正文实际覆盖范围判定为 `extend` 或 `override`。Pattern Index 不预设所有 Pattern 的统一关系；正文未明确时不得按文件名推断，命中后按具体 Reference 决定是否读取 Common Design 同类 Pattern。
+每个具体 Pattern Reference 必须显式声明 `Coverage: inherit | extend | override`。不得根据正文、文件名或层级自行推断 Coverage；未声明时记录 Coverage 缺失。
 
 ## Pattern 清单
 
@@ -16,7 +16,8 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 | `condition-expression-editor` | 在简单平铺、复杂条件组和对象卡片之间选择；执行条件行、AND/OR、对象关系和动态联动 | [`condition-expression-editor.md`](condition-expression-editor.md) |
 | `filtering` | 上游未锁定时选择筛选方式；锁定后执行对应模式 | [`filtering.md`](filtering.md) |
 | `action-eligibility` | 根据对象可执行性决定启用、部分执行或阻断 | [`action-eligibility.md`](action-eligibility.md) |
-| `confirmation` | 根据风险、既有承载和数量选择确认等级与容器 | [`tiered-confirmation.md`](tiered-confirmation.md) |
+| `tiered-confirmation` | 根据风险、既有承载和数量选择确认等级与容器 | [`tiered-confirmation.md`](tiered-confirmation.md) |
+| `enable-disable` | 根据表单保存、单条即时修改、只读或批量任务选择启禁用呈现与交互 | [`enable-disable.md`](enable-disable.md) |
 | `status-change` | 组合单条/批量资格、确认、提交和状态回写 | [`status-change.md`](status-change.md) |
 | `field-display` | 在文本、标签、图标、状态点和链接中选择 | [`field-display.md`](field-display.md) |
 | `disposal-status-display` | 决定处置状态字段位置和展示方式 | [`disposal-status-display.md`](disposal-status-display.md) |

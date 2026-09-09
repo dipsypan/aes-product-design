@@ -1,6 +1,7 @@
 # AES 导航、功能入口与变更影响检查
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属设计规范，专门约束 AES 导航与功能入口，不作为 Common Design 通用导航规范。本文明确规定的 AES 规则优先于 Common Design；未覆盖的通用入口判断由 `prd-design-code` 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属设计规范，专门约束 AES 导航与功能入口，不作为 Common Design 通用导航规范。
+> `Coverage: extend`
 
 本文定义 AES 导航格式、功能入口判断和变更影响检查方法。当前菜单分类、菜单名称、路由和菜单 Key 会随产品版本变化，必须以调用时获取的最新资料为准；本文不维护永久固定的菜单树或业务关系库。
 

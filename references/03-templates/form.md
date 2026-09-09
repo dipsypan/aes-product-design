@@ -1,6 +1,7 @@
 # AES 表单模板
 
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属页面模板，不作为 Common Design 的通用模板。先按 AES 业务确定容器、入口和流程结构，再映射 Common Design；不得为了匹配 Common Design 而改变 AES 方案。
+> `Coverage: extend`
 
 ## 定位
 
@@ -9,6 +10,8 @@
 字段控件、字段排列、标题样式、高级设置、依赖显隐、校验反馈、未保存状态判断和提交反馈交给 `../04-patterns/form-management.md`。保存、取消、返回和确认的业务结果来自 Theme，不得在本层自行定义。
 
 > 本文线框图仅用于说明结构关系。不得直接照抄图中的内容数量、排列方式、分区名称或操作按钮；只有正文明确列出的规则具有约束力。具体内容必须根据 Theme、当前产品同类页面和 Form Pattern 确定。
+
+执行顺序固定为：先确定页面类型、容器、入口和流程结构；再核对该类型的前端封装状态；随后按封装状态使用前端封装或视觉与业务参照；最后填写 `templateId` 和 `encapsulation`。视觉参照不得替代前端封装核验。
 
 ## 1. 决策模型
 
@@ -22,6 +25,18 @@
 ```
 
 不得将 Drawer 默认等同于单面表单，也不得将 Stepper 默认等同于下钻页面。
+
+### 页面模板类型不是业务分类
+
+页面模板类型只用于标识页面级承载方式，不等于业务分类。每个表单页面仍必须分别判断承载容器、入口关系和流程结构。
+
+### 页面类型：页面级表单页
+
+`page-form-config` 用于独立 Page 承载的表单，适合稳定入口或从列表进入后完成完整配置的场景。它支持 `stable` 或 `drilldown` 入口，以及 `single-surface` 或 `progressive` 流程结构；前端没有独立页面骨架，因此填写 `encapsulation: false`，但仍按本 Template 完整实现。
+
+### 页面类型：下钻步骤条配置页
+
+`page-form-stepper` 用于独立 Page 承载的步骤条表单，适合同一连续任务的多阶段配置。入口关系仍需根据实际页面路径判断为 `stable` 或 `drilldown`，不得因使用步骤条就默认入口为下钻。
 
 ## 2. 容器与入口决策
 
@@ -160,7 +175,23 @@ AES 任务创建可作为现有参考：第一层选择任务类型，第二层�
 - 校验失败时停留在当前步骤，并明确指出需要修正的内容。
 - 步骤之间保留已填写内容和未保存状态。
 
-## 4. 页面级区域
+## 4. 页面类型、templateId 与封装状态
+
+完成容器、流程结构和视觉业务参照核对后再执行本节。`templateId` 和 `encapsulation` 是页面设计结果，不参与表单结构选型；即使本节在文档中位于视觉证据之前，也不得跳过前端封装状态核验。
+
+| 页面类型 | 已确认结构 | `templateId` | `encapsulation` | 执行方式 |
+| --- | --- | --- | --- | --- |
+| 页面级表单页 | Page + Stable/Drilldown + Single-surface/Progressive | `page-form-config` | `false` | 按本 Template 契约实现 |
+| 下钻步骤条配置页 | Page + Stable/Drilldown + Stepper | `page-form-stepper` | `true` | 优先复用封装，未覆盖部分按本 Template 契约补充 |
+| 弹窗表单页 | Modal + Contextual + Single-surface/Progressive/Stepper | `page-form-modal` | `true` | 优先复用 Modal 骨架，未覆盖的流程结构继续补充 |
+| 抽屉表单页 | Drawer + Contextual + Single-surface/Progressive/Stepper | `page-form-drawer` | `true` | 优先复用 Drawer 骨架，未覆盖的流程结构继续补充 |
+| 自定义页面类型 | 没有既有 AES Template 可承载的表单结构 | `custom` | `false` | 按完整 Template 契约实现 |
+
+- `encapsulation: true` 只表示存在可复用页面骨架，不表示已经实现当前流程结构、业务分区、字段、校验、权限或提交结果。
+- `encapsulation: false` 时仍完整执行本 Reference，不得为了获得前端封装改变已确认的容器、入口关系或流程结构。
+- 字段、权限、校验、提交结果及业务组件继续由 Theme、Pattern、Feature 和 Component 决定。
+
+## 5. 页面级区域
 
 ```text
 表单容器
@@ -180,7 +211,7 @@ AES 任务创建可作为现有参考：第一层选择任务类型，第二层�
 - 操作区位置由本层确定，按钮语义由 Theme 提供。
 - 页面存在授权、风险、影响范围或其他业务提示时，预留 `noticeRegion`；提示条的展示条件和内容读取 `../04-patterns/page-notice.md`。
 
-## 5. 未保存保护
+## 6. 未保存保护
 
 所有可编辑表单都应保护未保存修改。
 
@@ -190,26 +221,55 @@ AES 任务创建可作为现有参考：第一层选择任务类型，第二层�
 - 保存失败时保留用户输入和当前流程位置。
 - 具体确认方式和按钮语义由 Theme 与 Form Pattern 确定。
 
-## 6. Common Design 映射
+## 实现绑定
 
-映射只用于连接 `prd-design-code` 和 Common Design，不改变 AES 结论。
+- `encapsulation: true` 的模板在编码阶段核验目标分支中的真实入口和参数；封装未覆盖的表单能力按本 Template 契约补充实现。
+- `encapsulation: false` 时不得声称复用了页面模板，按本 Template 契约和项目组件实现。
 
-| AES 结构 | Common 基础 `templateId` | AES 补充信息 |
-| --- | --- | --- |
-| Page + Single-surface | `page-form-config` | 使用入口关系区分 Stable/Drilldown |
-| Page + Stepper | `page-form-stepper` | 步骤导航按 AES 契约 |
-| Page + Progressive | `page-form-config` | 增加 Progressive 变体 |
-| Modal + Single-surface | `page-form-modal` | 无 |
-| Modal + Progressive/Stepper | `page-form-modal` | 增加对应流程变体 |
-| Drawer + Single-surface | `page-form-drawer` | 无 |
-| Drawer + Progressive/Stepper | `page-form-drawer` | 增加对应流程变体 |
+## 视觉与业务证据
 
-Common Design 没有对应组合时，使用最接近的容器模板作为基础，并通过 AES 变体补充，不得丢失流程结构。
+本节用于页面还原和视觉校验，不改变前面的页面类型、容器、入口、流程和区域判断。
+
+- `encapsulation: true` 时，先核验并优先使用前端页面封装；本节只用于校验封装效果、补充封装未覆盖内容和还原 AES 业务差异。
+- `encapsulation: false` 时，前端没有可直接调用的页面封装，本节作为页面结构和视觉还原参考，结合当前 Template 契约自行实现。
+- 参考页面不自动成为当前页面的业务字段、操作、状态或权限规则；这些内容仍由当前需求和上游设计契约决定。
+
+以下路径均相对于前端工程 `/Users/sangfor/Documents/aes-mgr-front0830`。
+
+### 单面表单
+
+| 容器 | 参考页面 | 关键源码 |
+| --- | --- | --- | --- | --- |
+| Modal | 新增或编辑白名单对象 | `app/app-lib/src/business-comp/whitelist_common/src/AddWhitelistModal.vue` |
+| Drawer | 病毒扫描任务配置 | `app/aes-task/src/view/task_create/components/virus_task/index.vue` |
+| Drawer | 客户端任务配置 | `app/aes-task/src/view/task_create/components/agent_task/agent_task_drawer.vue` |
+
+### 递进式表单
+
+任务创建是当前工程中 `progressive` 结构的主要参考：
+
+- 第一层选择任务类型：`app/aes-task/src/view/task_create/create_task_drawer.vue`
+- 病毒任务配置分支：`app/aes-task/src/view/task_create/components/virus_task/index.vue`
+- 客户端任务配置分支：`app/aes-task/src/view/task_create/components/agent_task/agent_task_drawer.vue`
+
+该实现体现了“选择任务类型 → 当前抽屉退出 → 对应配置抽屉打开 → 返回后恢复类型选择”的层级关系。不得把普通字段显隐当作递进式表单。
+
+### 步骤条表单
+
+- 安全策略配置：`app/aes-policy/src/view/mod_policy/policy_config/index.vue`
+- 升级策略配置：`app/aes-agent/src/view/upgrade_manage/upgrade_strategy_config/index.vue`
+
+优先参考安全策略配置中的 `IxProFormStepper`、步骤内容切换、步骤校验和底部操作区组织。
+
+参考页面用于确认容器、流程层级、返回关系和操作区位置。业务分区、字段、校验条件及提交结果仍由当前 Theme 和需求决定。
 
 ## 7. 输出契约
 
 ```yaml
 template_contract:
+  templateId: page-form-config | page-form-stepper | page-form-modal | page-form-drawer | custom
+  encapsulation: true | false
+  customReason: ""
   template_type: form
   form_container: page | modal | drawer
   entry_mode: stable | drilldown | contextual
@@ -232,7 +292,6 @@ template_contract:
     protected_exits: []
     internal_navigation_behavior: preserve | confirm-before-discard
   template_mapping:
-    common_template_id: ""
     aes_variant: ""
   pattern_requirements:
     - form-management
@@ -244,6 +303,9 @@ template_contract:
 ```
 
 未使用 Progressive 时 `flow_levels` 为空；未使用 Stepper 时 `step_contract.steps` 为空。
+
+- `templateId` 按第 4 节填写；无论是否封装都沿用该页面模板的稳定编号，`encapsulation: true` 时该编号同时与前端页面封装编号一致。
+- 没有既有 AES Template 可承载时填写 `templateId: custom`、`encapsulation: false` 和 `customReason`。
 
 ## 8. 准出条件
 

@@ -1,8 +1,16 @@
 # AES 表格勾选 Feature
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用能力规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 能力规则优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 适用于所有带复选框的表格，提供单行勾选和表头全选能力，为批量操作提供数据选择结果。
+
+## Feature 身份与封装
+
+- `featureId: table-selection`
+- `encapsulation: false`
+- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
 
 ## 1. 数量上限与批量操作边界
 

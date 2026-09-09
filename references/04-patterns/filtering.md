@@ -1,6 +1,8 @@
 # AES 筛选方式 Pattern
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 三种筛选方式
 
@@ -122,7 +124,26 @@ batch_search:
 default_filters: []
 ```
 
-## 7. 业务要求
+## 7. 输出契约
+
+```yaml
+pattern_contract:
+  pattern_id: filtering
+  decision_inputs: [condition_count, operator_complexity, available_width, upstream_lock]
+  selected_solution: condition-search | quick-filter-search | flat-filter
+  required_features: []
+  required_components: []
+  component_requirements:
+    - when: selected_solution=condition-search
+      components: [ConditionSearch]
+    - when: selected_solution=quick-filter-search
+      components: [QuickFilterLayer, QuickSearchFilter]
+  return_to_template: false
+  return_reason: ""
+  pattern_gaps: []
+```
+
+## 8. 业务要求
 
 - 筛选方式符合条件复杂度和实际可用宽度。
 - 条件少且能清晰平铺时，未强制使用快速筛选。

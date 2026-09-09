@@ -1,5 +1,6 @@
 # AES 表格管理 Pattern
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属表格方案规范，不作为跨产线通用规范。本文明确规定的 AES 规则优先于 Common Design；未覆盖事项由 `prd-design-code` 调用 Common Design 补充。
 
 本 Pattern 适用于所有承载结构化集合数据的表格，可由 List、Detail、Form Template，或 Modal、Drawer、局部 Feature 直接调用。调用方负责确定页面容器、所在区域、区域顺序和可用空间；本 Pattern 只决定表格内部能力、表格局部状态及其与父级查询上下文的联动。

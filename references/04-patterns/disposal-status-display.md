@@ -1,6 +1,8 @@
 # AES 处置状态展示 Pattern
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
+> `Coverage: extend`
+> 本文明确规定的 AES 方案优先；未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。
 
 ## 1. 调用条件
 
@@ -122,3 +124,18 @@ malware.exe  [已隔离]
 - 状态为空时不显示空标签。
 - 处置完成后，列表、图、卡片和详情中的状态保持一致。
 - 使用 AES 现有状态文案、颜色、图标和标签组件。
+
+## 输出契约
+
+```yaml
+pattern_contract:
+  pattern_id: disposal-status-display
+  decision_inputs: [has_status_field, entity_disposal_capability, display_context]
+  selected_solution: field-status | entity-tag | none
+  required_features: []
+  required_components: []
+  component_notes: 使用项目现有处置状态展示能力，具体入口由 Component 层核验
+  return_to_template: false
+  return_reason: ""
+  pattern_gaps: []
+```

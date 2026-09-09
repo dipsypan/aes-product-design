@@ -1,6 +1,8 @@
 # AES 独立策略 Theme Model
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Theme Model，不作为 Common Design 的通用主题规范。本主题能力在 Coverage 中为 `override`；缺失的 AES 业务知识进入 `reference_gaps`，不得自动回退 Common Design。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Theme Model，不作为 Common Design 的通用主题规范。
+> `Coverage: override`
+> 缺失的 AES 业务知识进入 `reference_gaps`，不得自动回退 Common Design。
 
 ## 输入与返回契约
 
@@ -38,6 +40,7 @@ platform_partition:
   enabled: true | false
   supported_combinations: [] # enabled=true 时填写已确认组合
   routing_pattern: platform-tabs | single-list
+enable_disable_contract: {} # 见“启禁用下游锁定契约”
 ```
 
 分支规则：
@@ -104,8 +107,49 @@ platform_partition:
 	•	分配对象、排除对象和生效资产必须作为完整的策略适用范围列组输出，不得只复用其中部分字段。
 	•	优先级、生效资产等需要解释业务口径的字段，必须复用安全策略的表头标题与小 i 提示模式；列宽必须为表头文字、排序图标和小 i 预留空间，不得出现表头换行。
 	•	分配对象 / 生效资产后加小 i 提示，分别解释「分配选中对象（不含继承）」「实际生效资产」；排除对象无值时统一显示「-」。
-	•	启用状态：默认策略不可关闭，悬浮提示「默认策略不允许禁用」；非默认策略开关切换需二次确认。
+	•	启用状态执行 `../04-patterns/enable-disable.md`：默认策略不可关闭，悬浮提示「默认策略不允许禁用」；非默认策略在列表中执行单条即时状态变更并二次确认，具体组件由 Component 阶段匹配。
 	•	操作列默认包含：编辑、删除、复制。内置策略的删除入口禁用，悬浮提示「内置策略不支持删除」。
+
+### 启禁用下游锁定契约
+
+策略对象自身的启用状态统一交给 `../04-patterns/enable-disable.md` 执行。Theme 负责锁定默认值、可编辑性和不可变规则；Pattern 只执行场景对应的交互语义，不得修改以下业务事实：
+
+```yaml
+enable_disable_contract:
+  object: policy
+  scenarios:
+    list: single-immediate-change
+    create: form-submit-choice
+    edit: form-submit-choice
+    copy: form-submit-choice
+    batch: batch-change
+  state_contract:
+    default_value:
+      create: enabled
+      copy: enabled
+    current_value_source:
+      list: server-truth
+      edit: server-truth
+    editable:
+      builtin_policy: false
+      custom_policy: true
+    immutable_rules:
+      - when: policy_type=builtin
+        target_state: disabled
+        allowed: false
+        reason: 默认策略不允许禁用
+```
+
+将其写入 Theme 输出：
+
+```yaml
+prescribed_downstream_contracts:
+  patterns:
+    - { contract_id: enable-disable, locked: true, values: enable_disable_contract }
+  components: []
+```
+
+本契约不指定组件名称、引用路径或实现 API；具体实现仅由后续 Component 阶段匹配。
 
 2.2.1 业务关键字段规则
 触发条件（满足任一即可新增）
@@ -143,7 +187,7 @@ platform_partition:
 	•	策略名称：必填，默认空
 	•	优先级：默认置于当前优先级 `1` 的策略之前，保存后按产品既有规则重排优先级编号；`1` 始终表示最高优先级，不允许产生两个含义冲突的 `1`
 	•	策略描述：选填，默认空
-	•	策略状态：开关，默认启用
+	•	策略状态执行 `../04-patterns/enable-disable.md` 的 `form-submit-choice` 方案，使用「启用 / 禁用」Radio，默认启用并随表单保存
 	•	2）策略配置：业务自定义内容；业务模型完成后由入口读取 `../03-templates/form.md` 并采用上游已确定容器，再读取 `../04-patterns/form-management.md`
 	•	3）分配资产：配置内容参照「新增安全策略 - 分配资产」 
 	•	资产范围：单选（全部资产 / 指定资产），选指定资产时唤起资产选择器
@@ -206,7 +250,7 @@ platform_partition:
 	•	策略名称：{{原策略名}}_副本
 	•	优先级：最高级，保存后按产品既有规则重排优先级编号；不得改变内置策略最低优先级的不变量
 	•	描述：空
-	•	启用状态：启用
+	•	启用状态执行 `../04-patterns/enable-disable.md` 的 `form-submit-choice` 方案：启用，随复制表单保存
 
 5、授权异常处理
 	•	未授权：隐藏对应配置模块
@@ -215,12 +259,8 @@ platform_partition:
 6、其他未提及的逻辑功能如删除策略、调整优先级等功能，除用户有明确定义外，都参照「策略中心 - 安全策略」效果。
 
 ## 基础布局排版逻辑
-	•	必填标记：必填 / 必选项，label 前加红色星标；未填写点击保存，统一提示「请输入此项」
+	•	当必填项未填写，点击保存，统一提示「请输入此项」
 	•	字段提示：配置项概念需解释原理时，label 后加「小 i 提示」（与 4.2 规则统一）
-	•	同一模块内表单项垂直间距：8px，不同模块的标题和上一个模块最后的配置项的垂直间距为20px
-	•	组件默认行高：32px
-	•	label 与输入区最小间距：16px；同表单内以最长 label 宽度统一左对齐
-
 
 
 
@@ -231,6 +271,8 @@ platform_partition:
 □ 已将保存、取消、返回、校验、确认和未保存离开转换为 `interaction_contracts`
 □ 未定义的策略配置规则已读取表单 Reference，无自行推演的内容 
 □ 内置策略、授权异常的限制逻辑正确
+□ 已输出 `enable_disable_contract`；新增与复制默认启用，编辑回显当前值，内置策略不可禁用且原因明确
+□ `enable_disable_contract` 未指定具体组件，Component 层没有反推默认值、可编辑性或不可变规则
 □ 已明确 `1` 为最高优先级，默认排序为业务优先级从高到低（数值 `ASC`）
 □ 内置策略因业务优先级最低而始终位于所有非内置策略之后，不依赖临时视觉置底
 □ 「优先级」「创建时间」「最近修改时间」表头均有可见、可操作的排序能力，时间首次排序为最新在前

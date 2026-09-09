@@ -1,5 +1,6 @@
 # AES 条件表达式编辑器 Pattern
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用条件编辑规范。本文明确规定的 AES 方案优先，未覆盖事项由 `prd-design-code` 按 Coverage 调用 Common Design 补充。上游已锁定的模式和参数只执行、展开和验证；未锁定时才按本文选择方案。本 Pattern 不决定业务字段、操作符集合、对象语义、关系语义或提交后的业务结果。
 
 ## 1. 定位与输入
@@ -131,7 +132,8 @@ field_catalog:
 ```yaml
 simple_flat_contract:
   condition_list:
-    component: IxProFormList
+    componentId: IxProFormList
+    component_source: AES / IDUX
     component_mode: condition-rows-only
     initial_rows: 1
     allow_add_condition: true
@@ -279,9 +281,9 @@ empty_expression:
 - 规则重复、规则冲突、策略冲突、生效范围、权限和业务状态由调用方校验。
 - 加载、提交、只读和 dirty 保护继续执行 `form-management.md`。
 
-## 9. 组件锁定
+## 9. 组件依赖
 
-条件行和条件组锁定使用 `IxProFormList`：
+`IxProFormList` 只用于 `simple-flat` 的动态条件行，不承载复杂条件组或对象卡片：
 
 - `simple-flat` 只启用条件行的新增、删除和排序能力。
 - `logical-groups` 启用条件行、条件组、嵌套和排序能力。
@@ -295,6 +297,10 @@ empty_expression:
 - 不管理 AND/OR，也不管理对象关系。
 
 真实组件无法执行锁定方案时返回上游，不得改变表达式结构。
+
+- `simple-flat` 的组件依赖为 `IxProFormList` 和 `IxProFormDependency`。
+- `logical-groups` 和 `entity-cards` 只在目标项目存在相应封装时复用，不得将 `IxProFormList` 当作条件组或对象卡片容器。
+- 组件职责和复用边界见 `../06-components/condition-list.md`；本 Pattern 不重复定义组件 API。
 
 ## 10. 输出契约
 
@@ -325,7 +331,10 @@ pattern_contract:
   validation_contracts: []
   state_contracts: []
   required_patterns: [form-management]
-  required_components: [IxProFormList, IxProFormDependency]
+  required_components: []
+  component_requirements:
+    - when: editor_mode.value=simple-flat
+      components: [IxProFormList, IxProFormDependency]
   return_to_stage: none | theme | template
   return_reason: ""
   pattern_gaps: []

@@ -1,5 +1,6 @@
 # AES 跨模块快速新增备注默认值 Feature
 
+> `Coverage: extend`
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Feature，不作为 Common Design 的通用默认值规范。本文仅约束任务和规则的 `备注` 字段。
 
 ## 1. 适用范围
@@ -11,6 +12,12 @@
 - 任务模块或规则模块自身的常规新增；
 - 编辑已有任务或规则；
 - 任务重新下发。
+
+## Feature 身份与封装
+
+- `featureId: contextual-remark-default`
+- `encapsulation: false`
+- 当前没有对应的 AES 前端业务封装，按本 Feature 规则实现。
 
 ## 2. 来源信息
 

@@ -1,6 +1,7 @@
 # AES 术语与页面文案规范
 
-> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属文案与术语设计规范，不作为 Common Design 的通用规范；它以 `extend` 关系补充 AES 专属词语和表达差异。
+> **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属文案与术语设计规范，不作为 Common Design 的通用规范。
+> `Coverage: extend`
 > 未在本文定义的内容，按 [Common Design 产品文案与术语规范](../../common-design/references/04-patterns/06-copywriting-terminology.md) 执行。
 
 ## 使用边界
