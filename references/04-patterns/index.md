@@ -18,7 +18,7 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 | `action-eligibility` | 根据对象可执行性决定启用、部分执行或阻断 | [`action-eligibility.md`](action-eligibility.md) |
 | `tiered-confirmation` | 根据风险、既有承载和数量选择确认等级与容器 | [`tiered-confirmation.md`](tiered-confirmation.md) |
 | `enable-disable` | 根据表单保存、单条即时修改、只读或批量任务选择启禁用呈现与交互 | [`enable-disable.md`](enable-disable.md) |
-| `status-change` | 组合单条/批量资格、确认、提交和状态回写 | [`status-change.md`](status-change.md) |
+| `status-change` | 存在用户可执行的状态切换时命中，例如启用、禁用、待处置、已处置；系统自动推进的只读状态不命中 | [`status-change.md`](status-change.md) |
 | `field-display` | 在文本、标签、图标、状态点和链接中选择 | [`field-display.md`](field-display.md) |
 | `disposal-status-display` | 决定处置状态字段位置和展示方式 | [`disposal-status-display.md`](disposal-status-display.md) |
 | `attack-technique-display` | 决定 ATT&CK 合并/分开、单项/多项展示 | [`attack-technique-display.md`](attack-technique-display.md) |
