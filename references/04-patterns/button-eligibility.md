@@ -1,4 +1,4 @@
-# AES 操作可执行性 Pattern
+# AES 操作按钮可执行性 Pattern
 
 > **归属：AES Product Design。** 本 Reference 是 AES（深信服下一代端点安全）产线专属 Pattern，不作为 Common Design 的通用交互规范。
 > `Coverage: extend`
@@ -79,7 +79,7 @@
 ## 输出契约
 
 ```yaml
-action_eligibility:
+button_eligibility:
   state: enabled | disabled
   executable_objects: []
   excluded_objects: []

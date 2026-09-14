@@ -183,15 +183,15 @@ query_context:
 | 导出 | 按 Export Feature 返回的范围规则执行 |
 
 - 本 Pattern 只确定操作是否依赖选择结果，以及入口位于工具栏还是行内。
-- 业务状态、对象类型等导致的可执行、部分执行或整体阻断，读取 [`action-eligibility.md`](action-eligibility.md)。
-- 操作权限与入口显隐必须来自上游 `permission_contract`；`action-eligibility` 不处理权限。缺少权限规则且会改变交互时写入 `pattern_gaps`，不得自行推断。
+- 业务状态、对象类型等导致的可执行、部分执行或整体阻断，读取 [`button-eligibility.md`](button-eligibility.md)。
+- 操作权限与入口显隐必须来自上游 `permission_contract`；`button-eligibility` 不处理权限。缺少权限规则且会改变交互时写入 `pattern_gaps`，不得自行推断。
 - 禁用控件必须具有当前对象、当前操作对应的 `disabled_reason`，并能通过真实悬浮或既有承载查看。
 
 ### 4.3 选择与批量结果
 
 - `capabilities.selection=true` 时完整读取 [`../05-features/table-selection.md`](../05-features/table-selection.md)。
 - 勾选上限由业务或技术提供；未提供时不得自行设置。
-- 根据批量操作数量和对象资格，使用 `action-eligibility` 决定禁选、部分执行或整体阻断。
+- 根据批量操作数量和对象资格，使用 `button-eligibility` 决定禁选、部分执行或整体阻断。
 - 执行前明确最终可执行对象数量；需要确认时调用 `tiered-confirmation`。
 - 全部成功、部分失败和全部失败必须返回数量与失败原因，不得静默跳过对象。
 - 操作完成后刷新当前表格并保留查询状态；选择集合清理由 Table Selection Feature 处理。
@@ -251,7 +251,7 @@ supplement_notice: ""
 - 双行展示只用于业务明确的强关联主次信息，不用于解决文本过长。
 - 字段内交互不得同时触发行详情。
 - 可点击字段需要当前页打开或跨页面跳转时，加入 [`../05-features/link-navigation.md`](../05-features/link-navigation.md)。
-- 可直接修改离散业务状态时，加入 [`status-change.md`](status-change.md)，不得在本 Pattern 自建状态切换链路。
+- 可直接修改处置状态时，加入 [`disposal-status.md`](disposal-status.md)，不得在本 Pattern 自建处置状态切换链路；启用 / 禁用读取 [`enable-disable.md`](enable-disable.md)。
 
 资产字段差异：
 
@@ -311,7 +311,7 @@ header_contract:
 
 - 行操作按频率和重要性排列，外放 2 至 3 个，其余收入「更多」。
 - 危险或不可逆操作优先收入更多菜单。
-- 启停、处置等离散状态修改执行 `status-change`；复杂表单或关联影响不得行内直接修改。
+- 处置状态修改执行 `disposal-status`；启停状态修改执行 `enable-disable`；复杂表单或关联影响不得行内直接修改。
 - 字段点击、选择框和操作列点击不得触发行主交互。
 - 操作后刷新受影响数据并反馈成功或失败，保持宿主上下文不变。
 - 无权限操作按上游 `permission_contract` 处理；不得把权限问题伪装为业务不可执行。
@@ -365,8 +365,9 @@ header_contract:
 | --- | --- |
 | 存在搜索或筛选 | [`filtering.md`](filtering.md) |
 | 字段需要确定展示语义 | [`field-display.md`](field-display.md) |
-| 存在可修改离散状态 | [`status-change.md`](status-change.md) |
-| 操作依赖对象业务资格 | [`action-eligibility.md`](action-eligibility.md) |
+| 存在可修改处置状态 | [`disposal-status.md`](disposal-status.md) |
+| 存在业务启用 / 禁用状态 | [`enable-disable.md`](enable-disable.md) |
+| 操作依赖对象业务资格 | [`button-eligibility.md`](button-eligibility.md) |
 | 操作需要确认 | [`tiered-confirmation.md`](tiered-confirmation.md) |
 | 存在复选框选择 | [`../05-features/table-selection.md`](../05-features/table-selection.md) |
 | 存在导入或导出 | 对应 Import / Export Feature |
@@ -441,7 +442,7 @@ pattern_contract:
 - 用户指定字段优先；自动补充字段已逐项说明，用户限制字段时没有擅自增加。
 - 表格与详情共享字段语义和数据真值，但没有强制展示详情全部字段。
 - 字段展示、状态切换、小 i、文字链、选择、导入导出和资产卡片均按条件调用对应依赖。
-- 权限来自上游契约，没有交给 `action-eligibility` 推断。
+- 权限来自上游契约，没有交给 `button-eligibility` 推断。
 - 表头、列宽、固定列、滚动、排序、分页和行交互满足当前宿主空间。
 - 父级已提供刷新时没有生成重复刷新入口。
 - 只覆盖表格局部状态，没有接管宿主页面整体状态。
