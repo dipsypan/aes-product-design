@@ -19,7 +19,7 @@
 
 ## 实现绑定
 
-- `componentId: PriorityAdjustModal`
+- `componentId: PriorityAdjustModal`，读取 [`../06-components/priority-adjust-modal.md`](../06-components/priority-adjust-modal.md)。
 - 来源：`AES__APP_LIB/PolicyCommon`
 
 ## 执行流程

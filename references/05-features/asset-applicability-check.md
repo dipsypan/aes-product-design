@@ -20,7 +20,7 @@ Theme 负责判断能力是否启用以及检测的业务实体；本 Feature �
 
 - `featureId: asset-applicability-check`
 - `encapsulation: true`
-- `componentId: CheckPolicyModal`
+- `componentId: CheckPolicyModal`，读取 [`../06-components/check-policy-modal.md`](../06-components/check-policy-modal.md)。
 - 封装负责检测弹窗和通用阶段交互；业务页面负责实体、结果字段和权限。
 
 ## 2. 入口
@@ -135,7 +135,7 @@ feature_contract:
 
 ## 实现绑定
 
-- `componentId: CheckPolicyModal`
+- `componentId: CheckPolicyModal`，读取 [`../06-components/check-policy-modal.md`](../06-components/check-policy-modal.md)。
 - 来源：`AES__APP_LIB/PolicyCommon`
 - 列表入口直接复用检测弹窗封装，不重新实现资产检索、检测状态或“开始检测”流程。
 - 编码阶段必须核验目标分支的实际导出名、路径、Props、API 配置和结果字段。

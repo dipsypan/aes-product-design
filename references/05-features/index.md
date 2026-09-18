@@ -32,6 +32,7 @@ Feature 是已经确定采用后可完整执行的单项方案。它可以包含
 - Feature 出现多套候选方案且需要根据场景选择时返回 Pattern 层，不在文件内扩张为决策编排器。
 - 每个 Feature Reference 必须显式声明 `Coverage: inherit | extend | override`；未声明时记录 Coverage 缺失，不得自行推断。
 - Feature 不重复定义组件实现；只声明所需组件语义或 AES 组件映射。
+- Feature 显式声明 `componentId` 时，必须同时链接 `../06-components/index.md` 中唯一对应的 Component Reference；无法解析时记录 `component_gap`，不得只输出组件名称或依赖编码阶段猜测。
 - 读取 Feature Reference 时，必须先判断使用条件和不适用场景，再决定是否启用 `featureId`。
 - `featureId` 仅用于编码映射，不代表能力自动适用；没有 `featureId` 不阻断当前需求。
 - `encapsulation: true` 时优先复用封装，未覆盖部分继续补充；`encapsulation: false` 时不得声称存在可复用前端封装。

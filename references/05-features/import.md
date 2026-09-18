@@ -14,7 +14,7 @@
 
 - `featureId: import`
 - `encapsulation: true`
-- `componentId: BatchImportModal`，并按需配合导入进度、结果和失败弹窗封装。
+- `componentId: BatchImportModal`，读取 [`../06-components/batch-import-modal.md`](../06-components/batch-import-modal.md)，并按需配合其内部导入进度、结果和失败弹窗封装。
 - 来源：`AES__APP_LIB/Impex`
 - 封装负责弹窗承载和通用阶段切换；本 Feature 仍负责业务字段、冲突策略、状态、结果、异常和列表更新。
 - 编码阶段必须核验目标分支的实际导出名、Props、Events 和任务状态接口。

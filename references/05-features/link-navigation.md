@@ -17,7 +17,7 @@
 
 - `featureId: link-navigation`
 - `encapsulation: false`
-- 当前没有映射到 AES 前端业务封装，按本 Feature 契约实现。
+- 本 Feature 的完整跳转行为没有统一封装；文字链展示复用 `componentId: LinkText`，读取 [`../06-components/link-text.md`](../06-components/link-text.md)，路由和打开方式仍按本 Feature 契约实现。
 
 ## 2. 当前页面打开
 

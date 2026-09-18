@@ -16,7 +16,7 @@ Theme 或用户已经锁定使用本 Feature 时直接完整执行，不得重�
 
 - `featureId: asset-scope`
 - `encapsulation: true`
-- 组件绑定：`AssetSelectorFormItem`、`AssetTags`、`EffectiveTags`、`PolicyAssetsDrawer`
+- 组件绑定：`AssetSelectorFormItem`、`AssetTags`、`EffectiveTags`、`PolicyAssetsDrawer`；对应 Component Reference 见“实现绑定”。
 - 封装负责选择、标签和抽屉的通用承载；本 Feature 负责资产范围语义、生效计算和业务更新。
 
 ## 2. 统一术语
@@ -157,9 +157,10 @@ Theme 或用户已经锁定使用本 Feature 时直接完整执行，不得重�
 
 ## 实现绑定
 
-- 表单组件：`componentId: AssetSelectorFormItem`
-- 列表摘要：`componentId: AssetTags / EffectiveTags`
-- 详情查看：`componentId: PolicyAssetsDrawer`
+- 表单组件：`componentId: AssetSelectorFormItem`，读取 [`../06-components/asset-selector.md`](../06-components/asset-selector.md)。
+- 分配/排除摘要：`componentId: AssetTags`，读取 [`../06-components/asset-tags.md`](../06-components/asset-tags.md)。
+- 生效资产摘要：`componentId: EffectiveTags`，读取 [`../06-components/effective-tags.md`](../06-components/effective-tags.md)。
+- 详情查看：`componentId: PolicyAssetsDrawer`，读取 [`../06-components/policy-assets-drawer.md`](../06-components/policy-assets-drawer.md)。
 - 资产选择、标签和详情抽屉直接复用对应 AES 封装，不在业务页面复制内部面板。
 - 编码阶段必须核验目标分支中的实际导出名、Props、Events 和数据转换方式。
 

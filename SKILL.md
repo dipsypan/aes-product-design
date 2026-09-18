@@ -58,6 +58,7 @@ Navigation → Theme → Template → Pattern → Feature → Component → Copy
 - `templateId`、`featureId` 和 `componentId` 不表示一定存在可复用封装；`encapsulation: true | false` 是唯一的封装判断。
 - `encapsulation: true` 时优先复用已有封装，未覆盖部分继续按当前层契约补充；`encapsulation: false` 时按当前层完整契约自行实现，不得声称复用了前端封装。
 - Component 的 `componentId` 只表示实现入口，不代表所有相似页面都必须使用；使用前仍需先判断适用条件。
+- Theme、Pattern 或 Feature 显式声明的每个 `componentId`，必须能在 `references/06-components/index.md` 中按真实 ID 唯一解析到 Component Reference；无法解析时返回 `component_gap`，不得仅凭名称猜测实现。
 - 前端封装、IDUX 组合和未封装能力都必须保持同一业务契约；封装不能覆盖或改写 Theme、Template、Pattern、Feature 已确认的业务规则。
 
 ### Theme 锁定下游方案

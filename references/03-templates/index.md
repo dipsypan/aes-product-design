@@ -30,12 +30,18 @@ Template 在 Theme 已确认业务对象、页面范围和业务不变量后读�
 | 下钻步骤条配置页 | Page + Stable/Drilldown + Stepper；同一连续任务的多步骤配置 | `page-form-stepper` | `true` | [`form.md`](form.md) |
 | 弹窗表单页 | Modal + 表单流程 | `page-form-modal` | `true` | [`form.md`](form.md) |
 | 抽屉表单页 | Drawer + 表单流程；保留父页上下文 | `page-form-drawer` | `true` | [`form.md`](form.md) |
-| 抽屉详情页 | Drawer + Contextual；快速查看或轻量处理 | `page-detail-drawer` | `true` | [`detail.md`](detail.md) |
+| 640px 无 Tab 抽屉详情页 | Drawer + Contextual + 640px + Sections | `drawer-detail-640` | `false` | [`detail.md`](detail.md) |
+| 640px 带 Tab 抽屉详情页 | Drawer + Contextual + 640px + Tabs | `drawer-detail-640-tabs` | `false` | [`detail.md`](detail.md) |
+| 960px 无 Tab 抽屉详情页 | Drawer + Contextual + 960px + Sections | `drawer-detail-960` | `false` | [`detail.md`](detail.md) |
+| 960px 带 Tab 抽屉详情页 | Drawer + Contextual + 960px + Tabs | `drawer-detail-960-tabs` | `false` | [`detail.md`](detail.md) |
 | 下钻详情页 | Page + Drilldown；独立路由的深度详情 | `page-detail-drilldown` | `false` | [`detail.md`](detail.md) |
 
 - `templateId` 只标识页面模板；筛选、导入、状态、确认等能力继续由 Pattern / Feature 决定。
 - `encapsulation: true` 时，表中 `templateId` 同时作为前端页面封装调用编号。
 - `encapsulation: false` 时，表中 `templateId` 仍须输出，但编码按完整 Template 契约自行实现；不因没有封装而改名。
+- 新增 `templateId` 必须以真实顶层容器为前缀：独立页面使用 `page-`，抽屉使用 `drawer-`，弹窗使用 `modal-`；后续变体按“任务—尺寸/结构”追加，禁止为 Drawer 或 Modal 新建 `page-` 前缀编号。
+- `page-list-modal`、`page-list-drawer`、`page-form-modal`、`page-form-drawer` 是 Common Design 与前端已登记的存量编号，仅作为兼容例外保留；若未来升级命名，必须同步前端注册表和所有调用方，不得在本索引单方面改名。
+- 四种抽屉详情页编号是待前端封装对齐的稳定目标；封装发布并核验对应入口后，须同步将本索引和 `detail.md` 中的 `encapsulation` 改为 `true`。Common Design 中既有的 `page-detail-drawer` 不作为第五种新模板，也不得作为新编号的命名样板。
 - 没有既有 AES Template 可承载时返回 `templateId: custom`，并按完整 Template 契约实现；不得为了命中已有编号删减或改变页面结构。
 
 ## 调用门禁
