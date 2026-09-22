@@ -12,7 +12,8 @@
 2. 已有业务确认承载后是否仍需追加二次确认；
 3. 使用 `input-confirmation` 还是 `click-confirmation`；
 4. 使用 Popconfirm 还是 Modal；
-5. 批量不可逆操作是否通过列表或表格回显操作对象。
+5. 批量不可逆操作是否通过列表或表格回显操作对象；
+6. 生成标准化的确认标题、确认问句和输入提示文案。
 
 使用约束：
 
@@ -29,6 +30,7 @@
 ```yaml
 operation:
   action: 操作按钮名称
+  action_copy: 用于确认文案的执行动作
   object_context: 操作对象上下文
   object_unit: 对象计量单位
   operation_scope: single | batch
@@ -51,6 +53,7 @@ reference_evidence: []
 关键取值规则：
 
 - `action`：取用户点击的操作按钮名称，例如“删除”“禁用”“隔离文件”“隔离资产”。
+- `action_copy`：从操作语义中提取不含对象的动词或动词短语，例如“删除”“禁用”“隔离”；不得直接使用会造成对象重复的完整按钮名称。
 - `object_context`：从页面标题、列表对象、详情对象或表单标题识别，例如“策略”“任务计划”“文件”“资产”“客户端”。
 - `object_unit`：按对象语义填写量词，例如策略用“条”、资产或客户端用“台”、文件用“个”；必须来自业务语义或现有页面表达。
 - `operation_scope`：单行、详情或针对一个主对象的操作为 `single`；勾选工具栏、批量入口或明确针对多个主对象的操作为 `batch`。只按主操作对象和入口判断，不按受影响对象数量判断。
@@ -63,7 +66,7 @@ reference_evidence: []
 - `identification_fields`：单字段不足时，填写最小必要联合标识字段。
 - `object_rows`：只包含最终实际操作对象，不含已排除对象或仅受影响对象。
 - `impact_items`：本次操作的业务影响，可用于单个操作的编号列表或补充说明；没有证据时不得编造。
-- `consequence_copy`：Input Confirmation 展示的风险、不可逆性或后果说明；缺失且影响用户判断时返回待确认。
+- `consequence_copy`：Input Confirmation 可选的操作后果。存在无法从动作本身直接理解、且会影响用户判断的业务后果时必须填写；只有常规直接后果时可为空。
 - `primary_confirmation_carrier_sufficient`：已有任务表单、预览页或配置复核页同时覆盖本次操作的对象、动作和主要后果时为 `true`；仅出现操作入口、对象名称或普通提示不算充分。
 
 例如，删除 1 条策略即使影响 5 台资产，仍是 `single`；从批量工具栏删除多条策略才是 `batch`。
@@ -212,14 +215,23 @@ component_variant:
 
 `no-echo` 不等同于 `single`：单个操作和批量可逆操作都可能命中。六个变体只用于 Modal；Popconfirm 使用项目已有轻量确认组件，不设置 `component_variant`。
 
-### 通用文案
+所有 Modal 变体都必须提供最终 `title_copy` 和 `question_copy`；Input Confirmation 变体还必须提供 `input_guidance_copy`，Click Confirmation 不生成该字段。
+
+### 确认文案结构
+
+前端组件只封装样式结构；调用层按本节生成最终文案后传入组件，不由组件推断动作、对象、数量或拼接标点。
+
+Input Confirmation 的呈现顺序固定为：`question_copy` → 对象回显（如有）→ 组件分割线 → `input_guidance_copy` → 输入框。
 
 - 标题：`{动作}{对象}`，例如“删除策略”；按钮名称已包含对象时不重复拼接。
-- 单个问句：`确定要{动作}该{对象}吗？`
-- 批量问句：`确定要{动作}所选的 {N}{单位}{对象}吗？`
+- 单个 `question_copy`：`确定{执行动作}该{对象}吗？`
+- 批量 `question_copy`：`确定{执行动作}所选的 {N} {单位}{对象}吗？`
 - 主按钮：`确定`；次按钮：`取消`。
 - `{N}` 必须等于 `effective_object_count`，并与对象回显数量和最终请求范围一致。
-- `{动作}`、`{单位}`、`{对象}` 可由 Copy 层校准，但不得改变问句结构。
+- `{执行动作}` 取 `action_copy`；`{单位}` 根据对象使用“条”“台”“个”等量词。
+- 有必要说明后果时，`input_guidance_copy` 为：`{consequence_copy}。若确定{执行动作}，请在下方输入“确认”：`
+- 只有常规直接后果时，`input_guidance_copy` 为：`若确定{执行动作}，请在下方输入“确认”：`
+- `consequence_copy` 不含句末标点，不写泛化警告，不复述对象回显；为空时不得残留多余标点。
 
 ### 对象回显
 
@@ -249,14 +261,8 @@ component_variant:
 
 ## 输入“确认”的交互
 
-`input-confirmation` 在单个和批量格式中均追加：
+`input-confirmation` 在单个和批量格式中均展示上一节生成的 `input_guidance_copy` 和输入框。
 
-```text
-{consequence_copy}，若确定{动作}请在下方输入“确认”：
-[请输入“确认”]
-```
-
-- `consequence_copy` 说明业务影响、不可逆后果或安全风险，不复述表格字段。
 - 占位文案固定为 `请输入“确认”`。
 - 只有输入完全等于 `确认` 时，“确定”按钮才可提交；空值、空格、缺字、多字或其他文本均不匹配。
 - 清空或修改为不匹配内容后，“确定”按钮恢复不可提交状态。
@@ -290,6 +296,7 @@ confirmation_contract:
   consequence_copy: ""
   title_copy: 最终确认标题
   question_copy: 最终确认问句
+  input_guidance_copy: 最终输入提示 | not-applicable
   primary_confirmation_carrier_type: none | task-form | preview-page | config-review | other
   primary_confirmation_carrier_sufficient: true | false
   reference_evidence: []
@@ -302,6 +309,7 @@ confirmation_contract:
 - 有充分业务承载但因超高危规则追加确认时，`confirmation_role: additional`；此前没有充分承载时为 `standalone`。
 - 无条件 Popconfirm 白名单的 `confirmation_role` 为 `standalone`。
 - Popconfirm 只允许与 Click Confirmation 和 `object_echo_format: none` 组合。
+- Input Confirmation 必须输出 `input_guidance_copy`；Click Confirmation 和无需确认时为 `not-applicable`。
 - `list` 只填写 `primary_identifier_field`；`table` 填写 `identification_fields`。
 - Modal 根据确认方式和回显格式输出唯一 `component_variant`；Popconfirm 和无需确认时为 `not-applicable`。
 
@@ -311,6 +319,7 @@ confirmation_contract:
 - 六个名称是同一确认组件的稳定 `component_variant`，不是六个独立 `componentId`；前端应通过确认方式和回显形式组合实现。
 - 新封装尚未在目标分支实现并核验前标记 `encapsulation: false`；实现后以代码真实组件名更新 `componentId`，核验六个变体、Props、Events 和调用方式后才可标记 `encapsulation: true`。
 - Popconfirm 复用项目现有 Popconfirm 或公共开关确认链路；编码阶段核验真实组件名和调用方式，不在本文编造组件 API。
+- ConfirmModal 接收最终 `title_copy`、`question_copy` 和按需提供的 `input_guidance_copy`；组件只负责固定结构，不负责业务文案拼接。
 - 封装负责确认容器、输入框和通用交互；本 Pattern 负责确认方式、触发条件、确认文案和数量口径，不负责操作成功、失败或部分成功后的反馈与业务处理。
 - 封装不足或业务行为超出组件能力时，按本文规则补充实现。实现阶段不得擅自把已经确定的 Input Confirmation 降级为 Click Confirmation；用户明确表达并确认的修改除外。
 - 批量列表和表格优先复用项目已有能力；不得为复用组件改变确认对象、数量口径或回显字段。
@@ -320,3 +329,4 @@ confirmation_contract:
 - 已先判断是否需要二次确认；无需确认时不再继续选择形式。
 - 系统只在登记的超高危操作命中阈值时使用 Input Confirmation；Popconfirm 只承载 Click Confirmation 且不回显对象。
 - 批量不可逆操作的 `{N}`、回显对象和最终请求范围一致，并已正确选择 `list` 或 `table`。
+- `question_copy` 已按单个或批量格式生成且不包含“要”；Input Confirmation 已生成 `input_guidance_copy`，`consequence_copy` 为空时没有残留多余标点。
