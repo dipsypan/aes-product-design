@@ -11,7 +11,7 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 | Pattern | 决策链 | 命中时读取 |
 | --- | --- | --- |
 | `table-management` | 在列表、详情、表单、Modal 或 Drawer 中按宿主上下文组合表格内部能力 | [`table-management.md`](table-management.md) |
-| `page-notice` | 上游未锁定时决定是否展示；锁定后执行内容结构和位置 | [`page-notice.md`](page-notice.md) |
+| `page-notice` | 上游未锁定时决定是否展示；默认采用紧凑文本型，仅在必须承载示意图、表格等富内容时使用富内容型 | [`../06-components/page-notice.md`](../06-components/page-notice.md) |
 | `form-management` | 组合字段组织、控件形态、依赖、校验、状态和提交保护 | [`form-management.md`](form-management.md) |
 | `condition-expression-editor` | 在简单平铺、复杂条件组和对象卡片之间选择；执行条件行、AND/OR、对象关系和动态联动 | [`condition-expression-editor.md`](condition-expression-editor.md) |
 | `filtering` | 上游未锁定时选择筛选方式；锁定后执行对应模式 | [`filtering.md`](filtering.md) |
@@ -28,6 +28,7 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 - Theme 或用户锁定的 Pattern 无法执行时返回锁定来源层，不得在本层切换方案。
 - Pattern 只选择和组合方案；选定的单项能力继续读取 `../05-features/index.md`。
 - Pattern 需要真实 AES 封装时读取 `../06-components/index.md`，不在 Pattern 中重写组件 API。
+- `page-notice` 的决策规则与前端 `IxAlert` banner 封装已合并为一个 Reference，由本索引直接路由到 `../06-components/page-notice.md`；不得再创建第二份同名 Pattern 文档。
 - Pattern 显式输出 `componentId` 或 `required_components` 时，必须同时链接 `../06-components/index.md` 中唯一对应的 Component Reference；无法解析时记录 `component_gap`，不得只输出组件名称。
 - Pattern 可以引用其他 Pattern，例如状态切换引用操作可执行性和分级确认，但必须明确主 Pattern 与依赖关系。
 - Table Pattern 不以 List Template 为固定前置；调用方已确定宿主容器和区域时可直接读取。表格不得反向决定页面类型、概览、左树、提示条或 Footer。

@@ -196,7 +196,7 @@ AES 任务创建可作为现有参考：第一层选择任务类型，第二层�
 ```text
 表单容器
 ├── 容器头部
-├── 页面提示区（按需，由 page-notice Pattern 决定）
+├── 页面提示区（按需，由 page-notice / IxAlert banner 契约决定）
 ├── 流程导航区（Progressive 或 Stepper）
 ├── 分区定位区（按需）
 ├── 表单正文
@@ -209,7 +209,7 @@ AES 任务创建可作为现有参考：第一层选择任务类型，第二层�
 - 分区较少或内容较短时不增加定位导航，不使用固定数量或屏数作为硬阈值。
 - 高级设置、二级标题和字段排列由 Form Pattern 决定。
 - 操作区位置由本层确定，按钮语义由 Theme 提供。
-- 页面存在授权、风险、影响范围或其他业务提示时，预留 `noticeRegion`；提示条的展示条件和内容读取 `../04-patterns/page-notice.md`。
+- 页面存在授权、风险、影响范围或其他业务提示时，预留 `noticeRegion`；提示条的展示条件、内容和 `IxAlert` banner 复用读取 `../06-components/page-notice.md`。
 
 ## 6. 未保存保护
 

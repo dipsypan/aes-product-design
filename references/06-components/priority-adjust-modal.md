@@ -20,8 +20,8 @@
 - 来源：`AES__APP_LIB/PolicyCommon`
 - 真实实现：`app/app-lib/src/business-comp/policy_common/priority_adjust_modal`
 
-## 复用契约
+## 能力边界
 
-- 组件负责弹窗承载、目标位置选择和通用提交交互。
-- 当前业务负责可调整对象、保护对象、当前顺序、权限、禁用原因和保存接口。
-- 编码阶段核验目标分支中的真实导出名、可见性参数、Props、Events 和提交函数；封装不足时按上游 Feature 补充。
+- 组件提供：弹窗承载、目标位置选择和通用提交交互。
+- 业务提供：可调整对象、保护对象、当前顺序、权限、禁用原因和保存接口。
+- 封装不足时返回 `priority-adjustment` Feature 补充。

@@ -20,8 +20,8 @@
 - 来源：`AES__APP_LIB/PolicyCommon`
 - 真实实现：`app/app-lib/src/business-comp/policy_common/modal/check_policy_modal`
 
-## 复用契约
+## 能力边界
 
-- 组件负责检测弹窗、资产检索、选择对象和结果区的通用交互承载。
-- 当前业务负责实体类型、接口配置、结果字段、权限和详情跳转。
-- 编码阶段核验目标分支中的真实导出名、Props、API 配置和结果数据结构；封装不足时返回 Feature 补充，不得改变检测流程。
+- 组件提供：检测弹窗、资产检索、选择对象和结果区的通用交互承载。
+- 业务提供：实体类型、接口配置、结果字段、权限和详情跳转。
+- 封装不足时返回 `asset-applicability-check` Feature 补充，不得改变检测流程。
