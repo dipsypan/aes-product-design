@@ -88,7 +88,7 @@ Drawer 与独立 Page 共享“导航—概要—提示—正文”的信息层�
 └── 正文内容区：分区平铺或 Tab
 ```
 
-页面存在授权、风险、影响范围或其他业务提示时，预留 `noticeRegion`，展示条件和内容读取 `../04-patterns/page-notice.md`。
+页面存在授权、风险、影响范围或其他业务提示时，预留 `noticeRegion`，展示条件、内容和 `IxAlert` banner 复用读取 `../06-components/page-notice.md`。
 
 ### 3.2 浅色概要区
 

@@ -68,3 +68,5 @@ template_contract:
   return_to_stage: none | navigation | theme
   template_gaps: []
 ```
+
+`noticeRegion: page-notice` 只标识页面提示区域，不是组件 ID；命中时读取 [`../06-components/page-notice.md`](../06-components/page-notice.md)，真实实现固定为 `componentId: IxAlert`、`presentation: banner`。

@@ -21,8 +21,8 @@
 - 来源：`AES__APP_LIB/PolicyCommon`
 - 真实实现：`app/app-lib/src/business-comp/policy_common/common/link-text`
 
-## 复用契约
+## 能力边界
 
-- 组件负责文字、可选图标、图标位置和点击事件的基础承载。
-- 当前业务负责路由、权限、打开目标、长文本和安全属性，并执行 `link-navigation` Feature。
-- 编码阶段核验目标分支中的真实导出名、Props、Events 和图标名称；组件存在不代表完整跳转 Feature 已被封装。
+- 组件提供：文字、可选图标、图标位置和点击事件的基础承载。
+- 业务提供：路由、权限、打开目标、长文本和安全属性，并执行 `link-navigation` Feature。
+- 组件存在不代表完整跳转 Feature 已被封装；缺失能力返回 `link-navigation` Feature 补充。

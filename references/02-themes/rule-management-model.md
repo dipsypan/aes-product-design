@@ -20,7 +20,7 @@
 
 按以下顺序执行：
 
-1. 完成第 2 节 `rule_decision`；未知事实进入 `confirmation_items`。
+1. 完成第 2 节 `rule_decision`、`business_invariants` 和 `lifecycle_contract`；未知事实进入 `confirmation_items` 或生命周期的 `unresolved_items`。
 2. 按第 3 节拆出列表页、新增表单、编辑表单和按需详情抽屉。
 3. 按第 4、5、6 节逐页输出页面契约；每个页面先声明下游 Reference，再执行 Theme 锁定结果。
 4. 将锁定结果写入第 7 节 `prescribed_downstream_contracts`。
@@ -49,6 +49,8 @@
 | 生效范围 | `fixed-global` / `configurable` | 可配置时强制调用 `asset-scope` |
 | 过期时间 | `fixed-permanent` / `customizable` | 固定永久时不生成配置项 |
 | 详情页 | `not-required` / `user-requested` | 只有用户明确指定时生成详情抽屉 |
+| 批量操作 | `enabled` / `disabled`，并明确允许的操作集合 | 决定是否调用 `table-selection` 及列表批量操作范围 |
+| 新增入口上下文 | `standard-create` / `quick-create` | 决定是否调用 `contextual-remark-default` 及来源信息回填 |
 
 ### 2.2 `rule_decision`
 
@@ -88,6 +90,16 @@ rule_decision:
     visible: true
     content_fields: [rule_purpose, current_count, count_limit]
     confirmed: true | false
+  batch_operations:
+    mode: enabled | disabled
+    allowed_operations: [delete, enable, disable]
+    decision_source: theme | requirement | user
+    confirmed: true | false
+  entry_context:
+    type: standard-create | quick-create
+    source_module: ""
+    source_object_name: ""
+    confirmed: true | false
   confirmation_items: []
 ```
 
@@ -103,7 +115,96 @@ rule_decision:
 - `detail.user_requested=true` 是生成详情的唯一条件。其他原因只能形成是否需要详情的确认项，不得自行生成。
 - `data_transfer.import` 和 `data_transfer.export` 只记录 Theme 基于需求信号给出的提案，不代表已启用；是否提供必须由用户确认。
 - 用户确认启用导入或导出后，才读取对应的 `../05-features/import.md` 或 `../05-features/export.md`（当前能力文档为 Feature；不得另造一套导入/导出流程）。未确认时不得生成对应入口或下游能力契约。
+- 规则管理默认提案启用批量删除、启用和禁用，写入 `batch_operations.allowed_operations`；只有 `batch_operations.mode=enabled` 且 `confirmed=true` 时才调用 `table-selection`。用户调整批量操作范围时更新本字段并记录影响，不得由 Table Management Pattern 自行补充操作。
+- `entry_context.type` 必须来自用户要求、需求入口或已确认上游上下文。`quick-create` 时将 `source_module` 和 `source_object_name` 传给 `contextual-remark-default`；`standard-create` 时不调用该 Feature。来源对象名称缺失时按 Feature 契约保持备注为空，不自行生成替代名称。
 - 影响字段、区域或操作的未知事实全部进入 `confirmation_items`；确认前不生成受影响内容。
+
+### 2.3 业务不变量
+
+业务不变量是列表、表单、详情、Pattern 和实现层都不得改变的稳定业务事实，不包含页面布局、组件选择和加载状态。以下结构是这些规则的唯一汇总来源；后续章节只负责在对应页面执行。
+
+```yaml
+business_invariants:
+  - invariant_id: one-record-one-rule
+    applies_when: always
+    rule: 列表一行始终对应一条完整规则
+    violation: 不得把条件、条件组或对象卡片拆成多条规则
+  - invariant_id: subject-value-unit
+    applies_when: rule_decision.match_mode.value=subject
+    rule: 一个有效主体值生成一条独立规则
+    violation: 多行主体不得合并成一条规则
+  - invariant_id: expression-unit
+    applies_when: rule_decision.match_mode.value=condition-combination
+    rule: 一个完整条件表达式只生成一条规则
+    violation: 不得按条件数量、条件组或对象数量拆分规则
+  - invariant_id: mode-specific-metadata
+    applies_when: always
+    rule: 单主体使用主体字段和备注；行为组合使用规则名称和规则描述
+    violation: 单主体不得生成规则名称、规则 ID 或规则描述，行为组合不得生成备注
+  - invariant_id: asset-scope-semantics
+    applies_when: rule_decision.asset_scope.value=configurable
+    rule: 分配资产、排除资产和生效资产三种语义必须同时存在并跨页面一致
+    violation: 不得省略、合并或改写为单一分配范围
+  - invariant_id: no-rule-priority
+    applies_when: always
+    rule: 规则采用命中即生效模型，不存在策略式优先级
+    violation: 不得生成优先级字段、优先级排序语义或优先级调整操作
+  - invariant_id: shared-field-semantics
+    applies_when: always
+    rule: 列表、表单和详情中的同一业务字段保持相同名称与值语义
+    violation: 不得在不同页面重新解释同一字段
+```
+
+用户修改不变量时，必须同步评估列表、表单、详情、导入导出和后端提交语义的影响；不得只改当前页面。页面视觉位置、容器、组件和交互状态不写入 `business_invariants`。
+
+### 2.4 生命周期契约
+
+生命周期只描述规则对象的业务状态、状态变化和操作后果。界面加载、提交中和请求失败属于页面交互状态；用户是否有权执行操作属于权限，不得混入本契约。
+
+```yaml
+lifecycle_contract:
+  object: rule
+  state_dimensions:
+    enablement:
+      semantic_states: [enabled, disabled]
+      enabled_value: enabled
+      disabled_value: disabled
+      default_value: { create: enabled }
+      current_value_source: { list: server-truth, edit: server-truth, detail: server-truth }
+      persistence_mode: { list: immediate-request, create: form-submit, edit: form-submit, detail: readonly, batch: immediate-request }
+      editable: { list: true, create: true, edit: true, detail: false, batch: true }
+      transitions:
+        - { from: enabled, action: disable, to: disabled }
+        - { from: disabled, action: enable, to: enabled }
+      immutable_rules: []
+    validity:
+      enabled_when: rule_decision.expiration.mode=customizable
+      configuration_modes: [never-expires, custom-expiration]
+      runtime_states:
+        never-expires: [effective]
+        custom-expiration: [effective, expired]
+      transition: { from: effective, trigger: expiration-time-reached, to: expired }
+      expiration_effect: { value: "", confirmed: true | false }
+      display_labels: {}
+  interaction_scenarios:
+    enablement: { list: single-immediate-change, create: form-submit-choice, edit: form-submit-choice, detail: readonly-status, batch: batch-change }
+  operation_results:
+    create: { result: rule-created, initial_enablement_source: submitted-form-value }
+    edit: { result: rule-updated, enablement_effect: preserve-unless-form-changed }
+    enable: { result: enabled }
+    disable: { result: disabled }
+    delete: { result: removed-from-current-list-after-success, storage_semantics: unknown }
+  unresolved_items: []
+```
+
+生命周期规则：
+
+- 启用状态和有效期状态是两个独立维度；不得用“已禁用”替代“已过期”，也不得由过期状态反推启用状态。
+- `expiration.mode=fixed-permanent` 时不生成有效期状态和转换；`customizable` 时必须确认过期后的业务后果、展示文案及是否允许编辑或重新启用。
+- 列表即时启禁用、表单随保存提交、详情只读和批量状态变化只执行 `interaction_scenarios.enablement`，不得由下游重新选型。
+- 编辑不是生命周期状态；除非用户在表单中明确修改启用状态，否则编辑保留原状态。
+- 删除成功后从当前列表移除；软删除、彻底删除、恢复和审计保留属于产品事实，需求涉及时从真实实现核验，未知项写入 `unresolved_items`，不得猜测。
+- 只有会影响当前页面字段、操作或反馈的生命周期未知项才同步进入 `confirmation_items` 并阻断对应设计；与当前需求无关的存储细节不扩大为前置问题。
 
 ## 3. 页面拆解框架
 
@@ -187,13 +288,13 @@ page_inventory:
 
 1. 读取 `../03-templates/list.md`，确定页面主容器、标题栏、表格和分页骨架。
 2. 读取 `../04-patterns/filtering.md`，确定检索与筛选能力的候选方案。
-3. 根据 Theme 已锁定事项、PRD 明确要求和用户确认结果，形成最终 `filter_contract`。
-4. 读取 `../04-patterns/page-notice.md`，执行页面提示区。
+3. 根据 Theme 已锁定事项、PRD 明确要求和用户确认结果，形成最终 `list_contract.filter_contract`。
+4. 读取 `../06-components/page-notice.md`，执行页面提示区及 `IxAlert` banner 复用。
 5. 读取 `../04-patterns/table-management.md` 和 `../05-features/table-selection.md`，执行批量操作区。
-6. 根据已确认的 `filter_contract`、列表字段契约和操作契约，执行规则表格区。
+6. 根据已确认的 `list_contract.filter_contract`、列表字段契约和操作契约，执行规则表格区。
 7. 按 List Template 和 Table Management Pattern 执行分页、排序、刷新和查询状态保留。
 
-Filtering 必须在工具栏、表格字段和分页交互设计之前完成方案确认。
+Filtering 必须在工具栏、表格字段和分页交互设计之前完成方案确认。第 4.2 至 4.7 节形成的结果必须统一写入第 4.8 节 `list_contract`，不得仅保留在说明文字中。
 
 ### 4.2 检索与筛选区
 
@@ -207,71 +308,72 @@ Filtering 只补全筛选模式的交互、状态和组件能力，不负责覆�
 Filtering Reference
 → Theme / PRD 形成筛选提案
 → 用户确认
-→ 锁定最终 filter_contract
+→ 锁定最终 list_contract.filter_contract
 ```
 
 #### 4.2.1 筛选提案
 
-Theme 根据 PRD 和已确认的业务字段生成 `filter_contract.proposal`。提案可以包含检索模式、快速筛选字段、关键词搜索字段、批量搜索能力和默认筛选条件，但不代表最终页面方案，不得直接生成页面入口。
+Theme 根据 PRD 和已确认的业务字段生成 `list_contract.filter_contract.proposal`。提案可以包含检索模式、快速筛选字段、关键词搜索字段、批量搜索能力和默认筛选条件，但不代表最终页面方案，不得直接生成页面入口。
 
 字段来源必须区分：`prd-required`、`user-specified`、`theme-recommended` 和 `ai-proposed`。
 
 #### 4.2.2 用户确认
 
-以下内容需要由用户最终确认：检索模式、快速筛选字段、关键词搜索字段、是否启用批量精准搜索、批量搜索字段和分隔方式、默认筛选条件、字段名称和字段顺序。用户确认后将结果写入 `filter_contract.final`。
+以下内容需要由用户最终确认：检索模式、快速筛选字段、关键词搜索字段、是否启用批量精准搜索、批量搜索字段和分隔方式、默认筛选条件、字段名称和字段顺序。用户确认后将结果写入 `list_contract.filter_contract.final`。
 
 #### 4.2.3 最终执行
 
-只有 `filter_contract.final` 可以进入页面设计和下游实现。`final.decision_locked=true` 后，Pattern 只负责执行，不得切换检索模式、增删筛选字段、将表格字段自动加入筛选区或重复生成另一套筛选入口。真实组件或接口无法执行时，必须返回 Theme 或用户确认层。
+只有 `list_contract.filter_contract.final` 可以进入页面设计和下游实现。`final.decision_locked=true` 后，Pattern 只负责执行，不得切换检索模式、增删筛选字段、将表格字段自动加入筛选区或重复生成另一套筛选入口。真实组件或接口无法执行时，必须返回 Theme 或用户确认层。
 
 三种筛选模式互斥：`condition-search`、`quick-filter-search`、`flat-filter`，不得同时生成多种模式。
 
 ```yaml
-filter_contract:
-  proposal:
-    search_mode: quick-filter-search | condition-search | flat-filter
-    quick_filter_fields: []
-    search_fields: []
-    batch_search:
-      enabled: true | false
-      fields: []
-      separator: ""
-    default_filters: []
-  user_decision:
-    status: pending | confirmed
-    selected_mode: ""
-    selected_quick_filter_fields: []
-    selected_search_fields: []
-    selected_batch_search:
-      enabled: true | false
-      fields: []
-      separator: ""
-    selected_default_filters: []
-  final:
-    search_mode: ""
-    decision_source: user | theme
-    decision_locked: true | false
-    quick_filter_fields: []
-    search_fields: []
-    batch_search:
-      enabled: true | false
-      fields: []
-      separator: ""
-    default_filters: []
+list_contract:
+  filter_contract:
+    proposal:
+      search_mode: quick-filter-search | condition-search | flat-filter
+      quick_filter_fields: []
+      search_fields: []
+      batch_search:
+        enabled: true | false
+        fields: []
+        separator: ""
+      default_filters: []
+    user_decision:
+      status: pending | confirmed
+      selected_mode: ""
+      selected_quick_filter_fields: []
+      selected_search_fields: []
+      selected_batch_search:
+        enabled: true | false
+        fields: []
+        separator: ""
+      selected_default_filters: []
+    final:
+      search_mode: ""
+      decision_source: user | theme
+      decision_locked: true | false
+      quick_filter_fields: []
+      search_fields: []
+      batch_search:
+        enabled: true | false
+        fields: []
+        separator: ""
+      default_filters: []
 ```
 
 ### 4.3 页面提示区
 
-先读取 `../04-patterns/page-notice.md`，再执行 Theme 锁定结果：
+先读取 `../06-components/page-notice.md`，再执行 Theme 锁定结果：
 
-- `rule_decision.notice.visible=true` 时，Pattern 不得重新判断是否展示；
+- `rule_decision.notice.visible=true` 时，`IxAlert` banner 契约不得重新判断是否展示；真实实现固定为 `componentId: IxAlert`、`presentation: banner`；
 - 内容声明规则用途、当前规则数量和数量上限；
 - 具体文案由需求提供，缺失时写入 `confirmation_items`；
-- 提示等级、布局和交互由 `page-notice.md` 补全，不得改变内容字段。
+- 提示等级、布局和交互由 `../06-components/page-notice.md` 补全，不得改变内容字段。
 
 ### 4.4 批量操作区
 
-先读取 `../04-patterns/table-management.md` 和 `../05-features/table-selection.md`，再执行以下锁定结果：
+先读取 `../04-patterns/table-management.md` 和 `../05-features/table-selection.md`，再执行以下锁定结果，并将最终操作写入 `list_contract.toolbar_contract.actions`：
 
 - 操作顺序为新增、删除、启用、禁用；新增始终可用，依赖选中项的操作在无选中项时禁用；
 - 可配置生效资产时，追加始终可用的“资产适用规则检测”，并完整执行 `../05-features/asset-applicability-check.md`；固定全局时不显示；
@@ -283,19 +385,19 @@ filter_contract:
 
 ### 4.5 规则表格区
 
-先读取 `../04-patterns/table-management.md`，再按本节输出列表列、排序和操作列。所有列均是 Theme 提案；用户已指定时采用用户结果，未指定时进入 `confirmation_items`，确认后才进入 `list_field_contract.final_columns`。
+先读取 `../04-patterns/table-management.md`，再按本节输出列表列、排序和操作列。所有列均是 Theme 提案；用户已指定时采用用户结果，未指定时进入 `confirmation_items`，确认后才进入 `list_contract.list_field_contract.final_columns`。
 
 ```yaml
-list_field_proposal:
-  field_key: ""
-  necessity: theme-required | theme-recommended | conditional | user-specified
-  proposed_label: ""
-  proposed_order: 0
-  visible: true | false
-  sortable: true | false
-  user_decision: pending | accepted | rejected
-  final_label: ""
-  final_order: 0
+list_contract:
+  list_field_contract:
+    proposals:
+      - field_key: ""
+        necessity: theme-required | theme-recommended | conditional | user-specified
+        proposed_label: ""
+        proposed_order: 0
+        visible: true | false
+        sortable: true | false
+        user_decision: pending | accepted | rejected
 ```
 
 | 建议顺序 | 抽象列/能力 | 级别 | 建议名称 | 排序 | 业务规则 |
@@ -323,7 +425,7 @@ list_field_proposal:
 
 - 用户拒绝 `theme-required` 列时不强制生成，但要记录影响；页面无法完成核心任务时返回 `conflicts`。
 - 用户最终决定列名称、显示、顺序和操作项；下游不得新增列或调整顺序。
-- 表格区只消费 `filter_contract.final`，不得重新选择筛选模式或补充筛选字段；表格字段不因出现在表格中而自动进入筛选区。
+- 表格区只消费 `list_contract.filter_contract.final`，不得重新选择筛选模式或补充筛选字段；表格字段不因出现在表格中而自动进入筛选区。
 - `asset_scope=configurable` 时，固定采纳“分配资产、排除资产、生效资产”三种语义，不可省略、合并或改成单一“分配范围”；名称可以由用户微调，但列表、表单、详情和资产抽屉必须保持同一语义映射。
 - 列表出现的时间字段均支持排序；默认按创建时间从最新到最早。排序切换保留检索和筛选条件并回到第一页。
 - 编辑打开编辑 Modal；删除读取 `../04-patterns/tiered-confirmation.md`，确认文案为 `确定要删除该规则吗？`。
@@ -338,6 +440,64 @@ list_field_proposal:
 ### 4.7 分页区与列表上下文
 
 分页、刷新、页码变化、查询条件保留和返回恢复执行 `../03-templates/list.md` 与 `../04-patterns/table-management.md`。编辑成功、批量操作完成或详情关闭后，保留当前检索、筛选、排序、页码和可恢复的滚动位置。
+
+### 4.8 列表页契约汇总
+
+第 4.2 至 4.7 节的最终结论必须收拢为一个 `list_contract`。它是列表页交给下游的唯一权威结构；正文中的字段表和规则说明只用于形成契约，不得由下游再次从文字推断操作、列或排序。
+
+```yaml
+list_contract:
+  filter_contract:
+    proposal: {}
+    user_decision: {}
+    final: {}
+  toolbar_contract:
+    action_order: []
+    actions:
+      - action_id: create | delete | enable | disable | asset-applicability-check | import | export
+        label: ""
+        operation_scope: page | selection
+        visible_when: always | condition-expression
+        enabled_when: always | selection-not-empty | condition-expression
+        requires_selection: true | false
+        decision_source: theme | requirement | user
+        downstream_reference: ""
+  list_field_contract:
+    proposals:
+      - field_key: ""
+        necessity: theme-required | theme-recommended | conditional | user-specified
+        proposed_label: ""
+        proposed_order: 0
+        visible: true | false
+        sortable: true | false
+        user_decision: pending | accepted | rejected
+    final_columns:
+      - field_key: ""
+        label: ""
+        order: 0
+        visible: true | false
+        sortable: true | false
+        decision_source: user | theme
+        business_rules: []
+  sort_contract:
+    default_sort:
+      field_key: created_at
+      direction: desc
+    sortable_fields:
+      - field_key: ""
+        allowed_directions: [asc, desc]
+    interaction_rules:
+      reset_page_on_change: true
+      preserve_filters: true
+      preserve_search: true
+```
+
+形成规则：
+
+- `list_contract.toolbar_contract.actions` 只写入实际显示的操作；`action_order` 只写入这些操作对应的 `action_id`。新增始终写入，删除、启用、禁用由 `rule_decision.batch_operations` 决定，资产检测、导入和导出分别由 `rule_decision.asset_scope` 与 `rule_decision.data_transfer` 决定。`visible_when` 和 `enabled_when` 中的条件表达式必须引用这些正式字段。操作按新增、删除、启用、禁用、资产适用规则检测、导入、导出的相对顺序排列，不得由下游重排。
+- `list_contract.list_field_contract.proposals` 保留 Theme 提案和用户决策过程；只有 `final_columns` 是可执行列契约。用户未确认的提案不得进入 `final_columns`。
+- `list_contract.sort_contract.sortable_fields` 只能来自 `list_contract.list_field_contract.final_columns` 中 `sortable=true` 的字段；默认排序固定为 `created_at desc`。下游不得自行增加可排序字段，切换排序时执行 `interaction_rules`。
+- `list_contract.filter_contract.final`、`list_contract.toolbar_contract.actions`、`list_contract.list_field_contract.final_columns` 和 `list_contract.sort_contract` 共同构成完整列表输入。任一必需子契约缺失时返回 Theme，不得靠正文、参考页面或组件能力补齐。
 
 ## 5. 新增与编辑表单设计
 
@@ -528,27 +688,42 @@ prescribed_downstream_contracts:
     - { contract_id: rule-edit-form, locked: true, values: page_inventory.edit_form }
     - { contract_id: rule-detail, locked: true, enabled_when: rule_decision.detail.user_requested=true, values: page_inventory.detail }
   patterns:
-    - { contract_id: filtering, locked: true, enabled_when: filter_contract.final.decision_locked=true, values: filter_contract.final }
-    - { contract_id: table-management, locked: true, values: { table_task: manage, column_contract: list_field_contract.final_columns } }
+    - { contract_id: filtering, locked: true, enabled_when: list_contract.filter_contract.final.decision_locked=true, values: list_contract.filter_contract.final }
+    - contract_id: table-management
+      locked: true
+      values:
+        table_task: manage
+        business_invariants: business_invariants
+        lifecycle_contract: lifecycle_contract
+        toolbar_contract: list_contract.toolbar_contract
+        column_contract: list_contract.list_field_contract.final_columns
+        sort_contract: list_contract.sort_contract
     - contract_id: enable-disable
       locked: true
       values:
-        scenarios: { list: single-immediate-change, create: form-submit-choice, edit: form-submit-choice, detail: readonly-status, batch: batch-change }
+        scenarios: lifecycle_contract.interaction_scenarios.enablement
         state_contract:
-          default_value: { create: enabled }
-          current_value_source: { list: server-truth, edit: server-truth, detail: server-truth }
-          editable: { list: true, create: true, edit: true, detail: false, batch: true }
-          immutable_rules: []
-    - { contract_id: form-management, locked: true, values: { fields_source: create_form_contract.final_fields | edit_form_contract.final_fields } }
-    - { contract_id: page-notice, locked: true, values: { visible: true, content_source: rule_decision.notice } }
+          enabled_value: lifecycle_contract.state_dimensions.enablement.enabled_value
+          disabled_value: lifecycle_contract.state_dimensions.enablement.disabled_value
+          default_value: lifecycle_contract.state_dimensions.enablement.default_value.create
+          persistence_mode: lifecycle_contract.state_dimensions.enablement.persistence_mode
+          editable: lifecycle_contract.state_dimensions.enablement.editable
+          transitions: lifecycle_contract.state_dimensions.enablement.transitions
+    - contract_id: form-management
+      locked: true
+      values:
+        fields_source: create_form_contract.final_fields | edit_form_contract.final_fields
+        business_invariants: business_invariants
+        lifecycle_contract: lifecycle_contract
+    - { contract_id: page-notice, locked: true, values: { visible: true, content_source: rule_decision.notice, componentId: IxAlert, presentation: banner } }
     - { contract_id: condition-expression-editor, locked: true, enabled_when: rule_decision.match_mode.value=condition-combination, values: condition_expression_contract }
   features:
-    - { contract_id: table-selection, locked: true, enabled_when: bulk_operations_confirmed }
+    - { contract_id: table-selection, locked: true, enabled_when: rule_decision.batch_operations.mode=enabled and rule_decision.batch_operations.confirmed=true, values: { allowed_operations: rule_decision.batch_operations.allowed_operations } }
     - { contract_id: import, locked: true, enabled_when: rule_decision.data_transfer.import.user_decision=enabled, source: ../05-features/import.md }
     - { contract_id: export, locked: true, enabled_when: rule_decision.data_transfer.export.user_decision=enabled, source: ../05-features/export.md }
     - { contract_id: asset-scope, locked: true, enabled_when: rule_decision.asset_scope.value=configurable, values: { required_semantics: [assigned, excluded, effective] } }
     - { contract_id: asset-applicability-check, locked: true, enabled_when: rule_decision.asset_scope.value=configurable }
-    - { contract_id: contextual-remark-default, locked: true, enabled_when: entry_type=quick-create and rule_decision.match_mode.value=subject }
+    - { contract_id: contextual-remark-default, locked: true, enabled_when: rule_decision.entry_context.type=quick-create and rule_decision.entry_context.confirmed=true and rule_decision.match_mode.value=subject, values: rule_decision.entry_context }
   components: []
   copy:
     - { contract_id: rule-terminology, locked: true, values: AES terminology }
@@ -574,11 +749,15 @@ prescribed_downstream_contracts:
 准出前确认：
 
 - `rule_decision` 完整，未知事实已进入 `confirmation_items`；
+- `business_invariants` 已逐项执行；列表、表单、详情和下游契约没有改变规则数量、模式字段、资产范围或优先级语义；
+- `lifecycle_contract` 已区分启用状态与有效期状态；影响当前设计的未知后果已进入 `unresolved_items` 和 `confirmation_items`；
+- 批量操作已通过 `rule_decision.batch_operations` 明确启用状态和允许操作；新增入口已通过 `rule_decision.entry_context` 明确普通新增或快速新增，不再依赖未定义条件变量；
 - 条件组合已确认 `condition_editor.mode`，并已形成完整、锁定的 `condition_expression_contract`；
 - 条件编辑模式、字段目录、关系权限、对象语义、空表达式语义和业务校验均有明确来源，Pattern 未重新决策；
 - 完整条件表达式只提交为一条规则，不使用单主体的部分成功语义；
 - 已先输出 `page_inventory`，再分别完成列表、新增、编辑和条件详情的页面契约；
 - 列表列、表单字段和详情字段分别有明确契约，共享语义但没有混成一张页面表；
+- `list_contract` 已完整形成；`list_contract.toolbar_contract.actions`、`list_contract.list_field_contract.final_columns` 和 `list_contract.sort_contract` 均有正式决策来源，下游只消费最终契约，不从正文推断；
 - 列表先读取 List Template，再读取 Filtering 并完成提案、用户确认和最终锁定，之后按顺序读取 Page Notice、Table Management 和 Table Selection 执行页面区域；
 - 新增和编辑分别输出字段、模式差异和提交结果；详情只在用户指定时输出；
 - `asset_scope=configurable` 时三种资产语义均存在；导入/导出只有用户确认启用后才读取并完整执行对应能力文档；
@@ -591,7 +770,7 @@ aes_stage_result:
   matched_references: [rule-management-model.md]
   resolved_design_abilities:
     - design_ability: match-rule-management
-      relation: override
+      Coverage: override
       aes_references: [rule-management-model.md]
       matched_aes_rules: []
       common_design_required: false
@@ -603,6 +782,12 @@ aes_stage_result:
       business_pattern: match-rule-management
       theme_resolution: { matched_theme: rule-management, common_theme_required: false }
       rule_decision: {}
+      business_invariants: []
+      lifecycle_contract:
+        state_dimensions: {}
+        interaction_scenarios: {}
+        operation_results: {}
+        unresolved_items: []
       page_inventory: {}
       condition_expression_contract: {}
       list_contract:
@@ -610,9 +795,16 @@ aes_stage_result:
           proposal: {}
           user_decision: {}
           final: {}
-        toolbar_contract: {}
-        list_field_contract: { proposals: [], final_columns: [] }
-        sort_contract: {}
+        toolbar_contract:
+          action_order: []
+          actions: []
+        list_field_contract:
+          proposals: []
+          final_columns: []
+        sort_contract:
+          default_sort: { field_key: created_at, direction: desc }
+          sortable_fields: []
+          interaction_rules: { reset_page_on_change: true, preserve_filters: true, preserve_search: true }
       create_form_contract: { field_proposals: [], final_fields: [], interaction_contracts: [] }
       edit_form_contract: { field_proposals: [], final_fields: [], interaction_contracts: [] }
       detail_contract:
@@ -631,15 +823,15 @@ aes_stage_result:
       - { reference: ../04-patterns/table-management.md, enabled_when: always }
       - { reference: ../04-patterns/enable-disable.md, enabled_when: enable-status-is-present }
       - { reference: ../04-patterns/form-management.md, enabled_when: always }
-      - { reference: ../04-patterns/page-notice.md, enabled_when: always }
+      - { reference: ../06-components/page-notice.md, enabled_when: always }
       - { reference: ../04-patterns/condition-expression-editor.md, enabled_when: rule_decision.match_mode.value=condition-combination }
       - { reference: ../04-patterns/tiered-confirmation.md, enabled_when: delete-or-status-operation }
-      - { reference: ../05-features/table-selection.md, enabled_when: bulk_operations_confirmed }
+      - { reference: ../05-features/table-selection.md, enabled_when: rule_decision.batch_operations.mode=enabled and rule_decision.batch_operations.confirmed=true }
       - { reference: ../05-features/import.md, enabled_when: rule_decision.data_transfer.import.user_decision=enabled }
       - { reference: ../05-features/export.md, enabled_when: rule_decision.data_transfer.export.user_decision=enabled }
       - { reference: ../05-features/asset-scope.md, enabled_when: rule_decision.asset_scope.value=configurable }
       - { reference: ../05-features/asset-applicability-check.md, enabled_when: rule_decision.asset_scope.value=configurable }
-      - { reference: ../05-features/contextual-remark-default.md, enabled_when: entry_type=quick-create and rule_decision.match_mode.value=subject }
+      - { reference: ../05-features/contextual-remark-default.md, enabled_when: rule_decision.entry_context.type=quick-create and rule_decision.entry_context.confirmed=true and rule_decision.match_mode.value=subject }
     prescribed_downstream_contracts:
       template: 第 7 节 template 数组
       patterns: 第 7 节 patterns 数组
@@ -660,6 +852,7 @@ aes_stage_result:
 
 - 存在 `user_decision=pending`、未确认的 `rule_decision` 或其他阻断页面生成的事实时，`status=needs_confirmation`，并同步写入 `confirmation_items`、`design_questions` 和 `blocking_questions`。
 - 所有必要事实已确认且不存在冲突时，`status=resolved`；不得因为已给出 Theme 提案就提前标记为已解决。
-- `list_contract`、`create_form_contract`、`edit_form_contract` 分别输出，不得互相代替；详情未由用户指定时，`detail_contract.enabled=false` 且不输出虚构字段。
+- `business_invariants` 和 `lifecycle_contract` 必须随 Theme 结果输出；影响当前设计的生命周期未知项同时写入 `confirmation_items`、`design_questions` 和 `blocking_questions`。
+- `list_contract`、`create_form_contract`、`edit_form_contract` 分别输出，不得互相代替；`list_contract` 必须按第 4.8 节输出完整子契约，下游不得从正文反推缺失字段；详情未由用户指定时，`detail_contract.enabled=false` 且不输出虚构字段。
 - 启用状态的默认值、当前值来源、可编辑性和各页面场景均由 Theme 锁定；`enable-disable` 只执行对应交互语义，不反推业务事实。
 - `required_references` 和 `prescribed_downstream_contracts` 必须按实际条件展开，不得返回空占位。

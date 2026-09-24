@@ -16,7 +16,7 @@ Component 是 Feature 和 Pattern 的具体实现载体。进入本层前必须�
 | `advanced-filter` | `ConditionSearch` | AES 前端已有封装 | [`advanced-filter.md`](advanced-filter.md) |
 | `quick-filter` | `QuickFilterLayer` / `QuickSearchFilter` | AES 前端已有封装 | [`quick-filter.md`](quick-filter.md) |
 | `input-number-range-tip` | `IxTooltip` + `IxInputNumber` | IDUX 组合 | [`input-number-range-tip.md`](input-number-range-tip.md) |
-| `page-notice` | `IxAlert` | IDUX | [`page-notice.md`](page-notice.md) |
+| `page-notice` | `IxAlert` | AES 前端已有封装（IDUX banner） | [`page-notice.md`](page-notice.md) |
 | `condition-list` | `IxProFormList` | IDUX Pro Form | [`condition-list.md`](condition-list.md) |
 | `status-dropdown-menu` | `StatusDropDownMenu` | AES 前端已有封装 | [`status-dropdown-menu.md`](status-dropdown-menu.md) |
 | `batch-import-modal` | `BatchImportModal` | `AES__APP_LIB/Impex` | [`batch-import-modal.md`](batch-import-modal.md) |
@@ -32,10 +32,13 @@ Component 是 Feature 和 Pattern 的具体实现载体。进入本层前必须�
 - 参考场景仅用于确认视觉和现状基线，不构成适用页面白名单。
 - Component 不得改变 Theme、Template、Pattern 或 Feature 已确定的业务结论。
 - 使用 `componentId` 前必须核验目标分支中的真实导出名、路径、Props、Events 和调用方式；未核验时不得声称已完成复用。
+- `encapsulation: true` 的 Component Reference 使用“能力边界”合并说明“组件提供什么、业务提供什么”和必要的组件级规则，不重复本 Index 的通用核验要求。
+- `encapsulation: false` 的 Component Reference 不使用“组件提供什么”的表述；应明确无封装状态、组合实现方式、具体设计规则、业务输入和验收要求。
 - Theme、Pattern 或 Feature 显式声明的每个 `componentId` 必须与上表真实 ID 精确匹配，并且只能解析到一个 Component Reference。无法解析、重复登记或只有组件名称而没有 Reference 时，返回 `component_gap`；不得以字符串相似、能力别名或临时搜索结果代替正式映射。
 - Feature 声明 `encapsulation: true` 时，只要其显式绑定了组件，就必须先完成上述映射检查；组件代码真实存在但未登记，仍属于 Component 知识缺口。
 - 每个 Component Reference 必须显式声明 `Coverage: inherit | extend | override`；未声明时记录 Coverage 缺失，不得根据实现来源推断。
 - `encapsulation: true` 表示存在可复用前端封装；封装未覆盖的业务部分继续由上游 Feature 或 Pattern 补充，不增加其它封装状态。
+- `encapsulation: false` 表示只有稳定实现基准、组件组合或完整设计规则，没有可直接调用的 AES 前端封装。
 - 只有存在真实 AES 业务封装、稳定组件语义或明确复用基线时才建立 Component Reference。
 - 小 i 提示等单项交互方案仍属于 Feature；数字范围提示已作为 AES `InputNumber` 的组件组合基准登记在本层。
 - 没有 AES Component Reference 的组件能力，不属于本 Index 的覆盖范围；返回 `prd-design-code` 读取 Common Design 组件映射或当前项目已有代码，不得将未登记能力推断为 AES 专属组件。

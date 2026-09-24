@@ -20,12 +20,8 @@
 - `encapsulation: true`
 - 组件能力：动态条件行
 
-## 复用契约
+## 能力边界
 
-- 组件负责动态条件行的表单承载和通用增删能力。
-- 编码阶段必须核验目标分支的实际 Props、Events、插槽和校验接入方式。
-
-## 业务补充
-
-- 当前业务负责字段目录、操作符、值类型、数量上限、默认行、必填和提交语义。
-- 具体模式选择和条件结构必须执行 `../04-patterns/condition-expression-editor.md`；封装不足时按该 Pattern 补充等价实现。
+- 组件提供：动态条件行的表单承载和通用增删能力。
+- 业务提供：字段目录、操作符、值类型、数量上限、默认行、必填和提交语义。
+- 模式选择和条件结构执行 [`../04-patterns/condition-expression-editor.md`](../04-patterns/condition-expression-editor.md)；封装不足时返回该 Pattern 补充等价实现。

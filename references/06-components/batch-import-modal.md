@@ -20,8 +20,8 @@
 - 来源：`AES__APP_LIB/Impex`
 - 真实实现：`app/app-lib/src/business-comp/impex/modals/BatchImportModal.vue`
 
-## 复用契约
+## 能力边界
 
-- 组件负责导入配置弹窗及其已有的进度、结果和失败反馈承载。
-- 当前业务负责提供业务标识，并执行 `import` Feature 中的模板、校验、冲突策略、数量口径和列表刷新要求。
-- 编码阶段核验目标分支中的真实导出名、Props、Events、最大文件限制和任务接口；封装不足时按 Feature 补充。
+- 组件提供：导入配置弹窗及其已有的进度、结果和失败反馈承载。
+- 业务提供：业务标识，并执行 `import` Feature 中的模板、校验、冲突策略、数量口径和列表刷新要求。
+- 组件的最大文件限制或任务接口不能满足业务契约时，返回 `import` Feature 补充。

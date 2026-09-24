@@ -33,9 +33,12 @@ condition_expression_input:
     runtime_confirmation: required | not-required
     display_message: ""
   limits:
+    condition_limit_mode: supported-fields | fixed-count | none
     max_conditions_per_group: null
     max_groups: null
     max_total_conditions: null
+    display_condition_count: false
+    limit_source: user | theme | business-reference | none
   business_validation: []
   submission:
     output: structured-expression
@@ -48,6 +51,7 @@ condition_expression_input:
 - 上游已锁定 `editor_mode` 时直接执行；无法执行时返回锁定来源层，不得换成其他模式。
 - 默认最多两层条件组，即根条件组和子条件组。用户明确指定时可以放开，但必须提供具体上限，不允许无限嵌套。
 - `submission.business_semantics` 由调用方定义，例如“生成一条规则”或“作为策略适用条件”。
+- 规则配置场景默认使用 `condition_limit_mode=supported-fields`：用户可以添加当前字段目录支持的全部条件，不设置固定条数上限，`display_condition_count=false`。不得从原型截图、历史页面、组件示例或前端默认值推导 `10` 等数量上限。
 
 ## 2. 模式选择
 
@@ -118,6 +122,23 @@ field_catalog:
     help: ""
 ```
 
+### 3.1 条件数量上限与计数信息
+
+条件可添加范围与界面计数信息必须分开判断：
+
+- `supported-fields`：以当前字段目录及字段去重规则决定还能否继续添加，不存在固定数字上限。规则配置场景默认采用此模式，不展示“当前已配置 N/M 条”“已添加 N 条”等计数信息。
+- `fixed-count`：仅当用户、Theme 或业务 Reference 明确规定固定数量上限时使用，并在 `max_conditions_per_group` 或 `max_total_conditions` 中记录具体数值。只有上游同时明确要求展示数量进度时，才允许设置 `display_condition_count=true`。
+- `none`：条件允许重复或不存在字段耗尽约束，且上游未规定固定数量上限；不展示计数信息。
+
+执行规则：
+
+1. `display_condition_count` 默认必须为 `false`。不得因为界面存在“添加条件”入口，就自动追加“当前已配置 N/M 条”。
+2. `max_conditions_per_group` 与 `max_total_conditions` 均为空时，禁止展示分母、上限或任何暗示固定配额的文案，包括 `0/10`、`1/10`、`当前已配置 2/10 条`。
+3. 在规则配置场景中，用户可以添加字段目录支持的全部条件。若同一字段只允许添加一次，当全部可用字段均已添加时，隐藏或禁用“添加条件”入口；可以提示“无更多可添加条件”，但不得换算或展示固定条数上限。
+4. 只有 `condition_limit_mode=fixed-count`、具体上限已由上游确认且 `display_condition_count=true` 时，才展示 `当前已配置 {current}/{max} 条`。达到上限后禁用添加入口。
+5. 如果只确认了固定上限、未确认是否需要展示进度，仍保持 `display_condition_count=false`；上限仅用于新增校验和达到上限后的入口状态。
+6. 条件数量信息不得用于替代必填校验、字段去重提示或“任意匹配”说明。
+
 ## 4. 简单平铺模式
 
 `simple-flat` 固定使用 `IxProFormList` 动态表单组件，只启用条件行的动态管理能力。
@@ -151,7 +172,7 @@ simple_flat_contract:
 - 默认生成一条条件行；“添加条件”在底部追加条件行。
 - 不生成条件组卡片、“新增条件组”、AND/OR 连接轨道或切换控件。
 - 多条条件在数据语义上固定使用 AND，但不在界面展示组关系。
-- 达到条件数量上限后禁用添加入口，并按需求显示当前数量和上限。
+- 添加能力按第 3.1 节执行。规则配置默认允许添加字段目录支持的全部条件，不展示当前数量或固定上限；仅在上游明确固定上限且要求展示进度时显示数量信息。
 - 不得使用静态表单行替代 `IxProFormList`，也不得因 AND 不可见而省略结构化列表数据。
 - 每条条件内部继续使用 `IxProFormDependency` 执行字段、操作符和值的联动。
 
@@ -236,6 +257,7 @@ entity_card:
 - 新增对象时创建该对象的条件编辑器；删除对象时同步处理其条件和关系；必填对象不得删除。
 - 每张对象卡片必须明确自身的空表达式契约，语义与 `empty_semantics` 保持一致；显示规则执行第 7.1 节。`required` 表示对象不可删除，不等于该对象必须配置条件。
 - 卡片的 `match-all` 只表示当前对象不增加条件限制，不得清空、忽略其他卡片的条件或对象关系，也不等于整个表达式任意匹配。
+- 每张对象卡片内的条件数量与计数信息统一执行第 3.1 节。规则配置场景不在“添加条件”入口旁展示 `当前已配置 N/M 条`；不得为不同卡片自行设置或推断固定数量上限。
 
 对象关系按以下契约执行：
 
@@ -378,6 +400,12 @@ pattern_contract:
     entity_cards: []
     entity_relations: []
   empty_expression_contract: {}
+  limits_contract:
+    condition_limit_mode: supported-fields | fixed-count | none
+    max_conditions_per_group: null
+    max_total_conditions: null
+    display_condition_count: false
+    limit_source: user | theme | business-reference | none
   interaction_contracts: []
   validation_contracts: []
   state_contracts: []
@@ -400,6 +428,8 @@ pattern_contract:
 - 对象卡片仅在明确多对象语义下使用，卡片内部条件关系没有替代对象关系。
 - 纵向排列的对象卡片之间，关系整体在两张卡片之间居中，未误排到表单标签列或任一卡片内部。
 - 条件运算符、条件组关系和对象关系没有混用。
+- 规则配置场景按支持字段范围添加条件，没有虚构固定条数上限，且未展示“当前已配置 N/M 条”等计数信息。
+- 仅当上游明确固定数量上限并明确要求展示进度时才显示数量信息；仅有固定上限但未要求展示时仍不显示计数。
 - 空表达式语义明确；任意匹配经过设计确认和运行时高风险确认。
 - 允许任意匹配的空对象卡片在标题旁显示对象专属次级说明；添加条件后隐藏且不显示计数，删除全部条件并确认任意匹配后恢复。
 - 未完成条件未被当作任意匹配；单张卡片的空表达式语义未扩大为其他卡片或整个表达式任意匹配。
