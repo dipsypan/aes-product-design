@@ -316,7 +316,6 @@ confirmation_contract:
 ## 实现绑定
 
 - `componentId: ConfirmModal`；Modal 优先复用 [`confirm-modal.md`](../06-components/confirm-modal.md) 登记的封装，策略删除等场景可配合 `PolicyCommon` 的业务删除弹窗封装。
-- 六个名称是同一确认组件的稳定 `component_variant`，不是六个独立 `componentId`；前端应通过确认方式和回显形式组合实现。
 - 新封装尚未在目标分支实现并核验前标记 `encapsulation: false`；实现后以代码真实组件名更新 `componentId`，核验六个变体、Props、Events 和调用方式后才可标记 `encapsulation: true`。
 - Popconfirm 复用项目现有 Popconfirm 或公共开关确认链路；编码阶段核验真实组件名和调用方式，不在本文编造组件 API。
 - ConfirmModal 接收最终 `title_copy`、`question_copy` 和按需提供的 `input_guidance_copy`；组件只负责固定结构，不负责业务文案拼接。
