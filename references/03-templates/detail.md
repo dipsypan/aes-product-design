@@ -179,10 +179,10 @@ Drawer 与独立 Page 共享“导航—概要—提示—正文”的信息层�
 
 | 宽度 | 正文组织 | `templateId` | `encapsulation` |
 | --- | --- | --- | --- |
-| 640px | 无 Tab | `drawer-detail-640` | `false` |
-| 640px | 有 Tab | `drawer-detail-640-tabs` | `false` |
-| 960px | 无 Tab | `drawer-detail-960` | `false` |
-| 960px | 有 Tab | `drawer-detail-960-tabs` | `false` |
+| 640px | 无 Tab | `drawer-detail-640` | `true` |
+| 640px | 有 Tab | `drawer-detail-640-tabs` | `true` |
+| 960px | 无 Tab | `drawer-detail-960` | `true` |
+| 960px | 有 Tab | `drawer-detail-960-tabs` | `true` |
 
 四个编号采用“容器—任务—变体”的命名顺序，`drawer-` 明确表示 Drawer 容器。它们是待前端封装对齐的稳定目标；前端真实入口发布并核验前保持 `encapsulation: false`，发布后同步修改本文件与 `index.md`。Common Design 中既有的 `page-detail-drawer` 只作为存量调用的迁移对象，不是第五种模板，也不得作为新编号的命名样板。
 

@@ -20,6 +20,7 @@
 | 规则 | IOC、白名单、黑名单、Hash、IP、域名、匹配条件 | `rule-management-model.md` | 直接读取 |
 | 任务 | 扫描、查杀、分发、预约、周期任务、执行结果 | `task-center-model.md` | 直接读取 |
 | 病毒防护 | 病毒检测、病毒列表、病毒详情、病毒处置 | `virus-protection-model.md` | 直接读取；涉及任务时追加任务模型 |
+| 隔离区 | 隔离记录、隔离对象、恢复、删除隔离备份、隔离来源 | `isolation-zone-model.md` | 直接读取；涉及任务时追加任务模型 |
 
 ### 规则主题补充路由
 

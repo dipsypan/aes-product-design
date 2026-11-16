@@ -19,6 +19,7 @@ Pattern 在 Template 已确定页面类型、主容器和页面区域后读取�
 | `tiered-confirmation` | 根据风险、既有承载和数量选择确认等级与容器 | [`tiered-confirmation.md`](tiered-confirmation.md) |
 | `enable-disable` | 根据表单保存、单条即时修改、只读或批量任务选择启禁用呈现与交互 | [`enable-disable.md`](enable-disable.md) |
 | `disposal-status` | 存在处置状态展示或用户可执行的处置状态切换时命中；系统自动推进的处置状态只执行展示规则，启用 / 禁用由 `enable-disable` 负责 | [`disposal-status.md`](disposal-status.md) |
+| `entity-disposal-action` | 根据处置程度、实体能力、权限和业务限制，决定处置动作顺序、状态限制、操作资格、不可用原因及批量处理方式 | [`entity-disposal-action.md`](entity-disposal-action.md) |
 | `field-display` | 在文本、标签、图标、状态点和链接中选择 | [`field-display.md`](field-display.md) |
 | `attack-technique-display` | 决定 ATT&CK 合并/分开、单项/多项展示 | [`attack-technique-display.md`](attack-technique-display.md) |
 
