@@ -19,6 +19,8 @@ Component 是 Feature 和 Pattern 的具体实现载体。进入本层前必须�
 | `page-notice` | `IxAlert` | AES 前端已有封装（IDUX banner） | [`page-notice.md`](page-notice.md) |
 | `condition-list` | `IxProFormList` | IDUX Pro Form | [`condition-list.md`](condition-list.md) |
 | `status-dropdown-menu` | `StatusDropDownMenu` | AES 前端已有封装 | [`status-dropdown-menu.md`](status-dropdown-menu.md) |
+| `dropdown` | `dropdown` | AES 设计规范与组合实现 | [`dropdown.md`](dropdown.md) |
+| `opr-popover` | `OprPopover` | AES 前端已有封装 | [`opr-popover.md`](opr-popover.md) |
 | `batch-import-modal` | `BatchImportModal` | `AES__APP_LIB/Impex` | [`batch-import-modal.md`](batch-import-modal.md) |
 | `check-policy-modal` | `CheckPolicyModal` | `AES__APP_LIB/PolicyCommon` | [`check-policy-modal.md`](check-policy-modal.md) |
 | `priority-adjust-modal` | `PriorityAdjustModal` | `AES__APP_LIB/PolicyCommon` | [`priority-adjust-modal.md`](priority-adjust-modal.md) |
